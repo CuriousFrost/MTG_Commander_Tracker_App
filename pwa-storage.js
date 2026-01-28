@@ -1,0 +1,323 @@
+// PWA Storage - IndexedDB implementation for browser environment
+// Provides offline-capable storage using IndexedDB and Scryfall API for commanders
+
+const DB_NAME = 'mtg-commander-tracker';
+const DB_VERSION = 1;
+
+export class PWAStorage {
+    constructor() {
+        this.db = null;
+        this._commandersCache = null;
+        this._commandersCacheTime = null;
+        this._commandersCacheMaxAge = 24 * 60 * 60 * 1000; // 24 hours
+    }
+
+    // Initialize IndexedDB
+    async init() {
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+            request.onerror = () => reject(request.error);
+            request.onsuccess = () => {
+                this.db = request.result;
+                resolve();
+            };
+
+            request.onupgradeneeded = (event) => {
+                const db = event.target.result;
+
+                // Create object stores
+                if (!db.objectStoreNames.contains('decks')) {
+                    const decksStore = db.createObjectStore('decks', { keyPath: 'id' });
+                    decksStore.createIndex('name', 'name', { unique: false });
+                }
+
+                if (!db.objectStoreNames.contains('games')) {
+                    const gamesStore = db.createObjectStore('games', { keyPath: 'id' });
+                    gamesStore.createIndex('date', 'date', { unique: false });
+                }
+
+                if (!db.objectStoreNames.contains('commanders')) {
+                    db.createObjectStore('commanders', { keyPath: 'name' });
+                }
+
+                if (!db.objectStoreNames.contains('metadata')) {
+                    db.createObjectStore('metadata', { keyPath: 'key' });
+                }
+            };
+        });
+    }
+
+    // Generic transaction helper
+    _transaction(storeName, mode = 'readonly') {
+        const tx = this.db.transaction(storeName, mode);
+        return tx.objectStore(storeName);
+    }
+
+    // Generic get all helper
+    async _getAll(storeName) {
+        return new Promise((resolve, reject) => {
+            const store = this._transaction(storeName);
+            const request = store.getAll();
+            request.onsuccess = () => resolve(request.result || []);
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    // Generic put helper
+    async _put(storeName, data) {
+        return new Promise((resolve, reject) => {
+            const store = this._transaction(storeName, 'readwrite');
+            const request = store.put(data);
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    // Generic delete helper
+    async _delete(storeName, key) {
+        return new Promise((resolve, reject) => {
+            const store = this._transaction(storeName, 'readwrite');
+            const request = store.delete(key);
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    // Commander operations - fetch from Scryfall with caching
+    async getCommanders() {
+        // Check memory cache first
+        if (this._commandersCache &&
+            this._commandersCacheTime &&
+            (Date.now() - this._commandersCacheTime) < this._commandersCacheMaxAge) {
+            return this._commandersCache;
+        }
+
+        // Check IndexedDB cache
+        const cachedCommanders = await this._getAll('commanders');
+        const metadata = await this._getMetadata('commanders_updated');
+
+        if (cachedCommanders.length > 0 && metadata) {
+            const cacheAge = Date.now() - new Date(metadata.value).getTime();
+            if (cacheAge < this._commandersCacheMaxAge) {
+                this._commandersCache = cachedCommanders;
+                this._commandersCacheTime = Date.now();
+                return cachedCommanders;
+            }
+        }
+
+        // Fetch from Scryfall
+        try {
+            const commanders = await this._fetchCommandersFromScryfall();
+
+            // Cache in IndexedDB
+            await this._cacheCommanders(commanders);
+
+            // Cache in memory
+            this._commandersCache = commanders;
+            this._commandersCacheTime = Date.now();
+
+            return commanders;
+        } catch (error) {
+            console.error('Error fetching commanders:', error);
+            // Return cached data if available, even if stale
+            if (cachedCommanders.length > 0) {
+                this._commandersCache = cachedCommanders;
+                this._commandersCacheTime = Date.now();
+                return cachedCommanders;
+            }
+            return [];
+        }
+    }
+
+    async _fetchCommandersFromScryfall() {
+        console.log('Fetching commanders from Scryfall...');
+        let allCommanders = [];
+        let hasMore = true;
+        let nextPage = 'https://api.scryfall.com/cards/search?q=is:commander';
+
+        while (hasMore) {
+            const response = await fetch(nextPage);
+            if (!response.ok) {
+                throw new Error(`Scryfall API error: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            const commanders = data.data.map(card => ({
+                name: card.name,
+                colorIdentity: card.color_identity || [],
+                colors: card.colors || [],
+                type: card.type_line
+            }));
+
+            allCommanders = allCommanders.concat(commanders);
+
+            hasMore = data.has_more;
+            if (hasMore) {
+                nextPage = data.next_page;
+                // Respect Scryfall rate limits
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+
+            console.log(`Fetched ${allCommanders.length} commanders...`);
+        }
+
+        console.log(`Completed: ${allCommanders.length} total commanders`);
+        return allCommanders;
+    }
+
+    async _cacheCommanders(commanders) {
+        const tx = this.db.transaction(['commanders', 'metadata'], 'readwrite');
+        const commandersStore = tx.objectStore('commanders');
+        const metadataStore = tx.objectStore('metadata');
+
+        // Clear existing commanders
+        commandersStore.clear();
+
+        // Add all commanders
+        for (const commander of commanders) {
+            commandersStore.put(commander);
+        }
+
+        // Update metadata
+        metadataStore.put({ key: 'commanders_updated', value: new Date().toISOString() });
+
+        return new Promise((resolve, reject) => {
+            tx.oncomplete = () => resolve();
+            tx.onerror = () => reject(tx.error);
+        });
+    }
+
+    async _getMetadata(key) {
+        return new Promise((resolve, reject) => {
+            const store = this._transaction('metadata');
+            const request = store.get(key);
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    // Deck operations
+    async getMyDecks() {
+        return this._getAll('decks');
+    }
+
+    async saveDeck(deck) {
+        await this._put('decks', deck);
+        return this._getAll('decks');
+    }
+
+    async updateDeck(deckId, updates) {
+        const decks = await this._getAll('decks');
+        const deckIndex = decks.findIndex(d => d.id === deckId);
+
+        if (deckIndex !== -1) {
+            const updatedDeck = { ...decks[deckIndex], ...updates };
+            await this._put('decks', updatedDeck);
+        }
+
+        return this._getAll('decks');
+    }
+
+    async deleteDeck(deckId) {
+        await this._delete('decks', deckId);
+        return this._getAll('decks');
+    }
+
+    async toggleDeckArchive(deckId) {
+        const decks = await this._getAll('decks');
+        const deck = decks.find(d => d.id === deckId);
+
+        if (deck) {
+            deck.archived = !deck.archived;
+            await this._put('decks', deck);
+        }
+
+        return this._getAll('decks');
+    }
+
+    // Game operations
+    async getGames() {
+        return this._getAll('games');
+    }
+
+    async saveGame(game) {
+        await this._put('games', game);
+        return this._getAll('games');
+    }
+
+    async updateGame(game) {
+        await this._put('games', game);
+        return this._getAll('games');
+    }
+
+    async deleteGame(gameId) {
+        await this._delete('games', gameId);
+        return this._getAll('games');
+    }
+
+    // Export operations - using browser download API
+    async exportToCsv() {
+        const games = await this._getAll('games');
+
+        if (games.length === 0) {
+            return { success: false, message: 'No games to export' };
+        }
+
+        // Create CSV content
+        const headers = 'Date,Deck Name,Commander,Result,Winner Color Identity,Opponents,Total Players\n';
+        const rows = games.map(game => {
+            const opponents = game.opponents.map(o => o.name).join('; ');
+            return `${game.date},"${game.myDeck.name}","${game.myDeck.commander.name}",${game.won ? 'Win' : 'Loss'},${game.winnerColorIdentity},"${opponents}",${game.totalPlayers}`;
+        }).join('\n');
+
+        const csvContent = headers + rows;
+
+        // Download using browser API
+        this._downloadFile(csvContent, 'mtg-commander-games.csv', 'text/csv');
+
+        return { success: true, message: 'CSV file downloaded' };
+    }
+
+    async exportToJson() {
+        const games = await this._getAll('games');
+        const decks = await this._getAll('decks');
+
+        if (games.length === 0 && decks.length === 0) {
+            return { success: false, message: 'No data to export' };
+        }
+
+        const exportData = {
+            decks: decks,
+            games: games,
+            exportedAt: new Date().toISOString()
+        };
+
+        const jsonContent = JSON.stringify(exportData, null, 2);
+
+        // Download using browser API
+        this._downloadFile(jsonContent, 'mtg-commander-data.json', 'application/json');
+
+        return { success: true, message: 'JSON file downloaded' };
+    }
+
+    _downloadFile(content, filename, mimeType) {
+        const blob = new Blob([content], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        URL.revokeObjectURL(url);
+    }
+
+    // External link handling - opens in new tab
+    openExternal(url) {
+        window.open(url, '_blank', 'noopener,noreferrer');
+    }
+}

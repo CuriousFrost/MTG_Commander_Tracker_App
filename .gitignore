@@ -1,5 +1,6 @@
 node_modules/
 dist/
+pwa-dist/
 build/
 .env
 *.log

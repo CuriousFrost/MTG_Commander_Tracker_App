@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generate PWA Icons</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #1a1a2e;
+            color: #fff;
+        }
+        .icon-preview {
+            display: inline-block;
+            margin: 10px;
+            text-align: center;
+        }
+        canvas {
+            border: 1px solid #ffd700;
+            display: block;
+            margin-bottom: 5px;
+        }
+        button {
+            background: #ffd700;
+            color: #1a1a2e;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 5px;
+        }
+        a {
+            display: block;
+            color: #ffd700;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>PWA Icon Generator</h1>
+    <p>Click "Generate All" to create icons, then right-click each image and save it.</p>
+    <button onclick="generateAll()">Generate All Icons</button>
+    <div id="icons"></div>
+
+    <script>
+        const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
+        const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+            <defs>
+                <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#0a0e27"/>
+                    <stop offset="100%" style="stop-color:#1a1d3a"/>
+                </linearGradient>
+                <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#ffd700"/>
+                    <stop offset="100%" style="stop-color:#ffb347"/>
+                </linearGradient>
+            </defs>
+            <rect width="512" height="512" rx="64" fill="url(#bgGrad)"/>
+            <rect x="96" y="56" width="320" height="400" rx="24" fill="url(#goldGrad)" opacity="0.9"/>
+            <rect x="116" y="76" width="280" height="280" rx="16" fill="url(#bgGrad)"/>
+            <path d="M256 140 L216 200 L176 180 L196 240 L316 240 L336 180 L296 200 Z"
+                  fill="url(#goldGrad)" stroke="#0a0e27" stroke-width="4"/>
+            <circle cx="256" cy="160" r="20" fill="#0a0e27" stroke="url(#goldGrad)" stroke-width="4"/>
+            <g transform="translate(136, 290)">
+                <circle cx="24" cy="24" r="20" fill="#f9faf4" stroke="#c9c5ba" stroke-width="2"/>
+                <circle cx="84" cy="24" r="20" fill="#0e68ab" stroke="#aae0fa" stroke-width="2"/>
+                <circle cx="144" cy="24" r="20" fill="#150b00" stroke="#8c8270" stroke-width="2"/>
+                <circle cx="204" cy="24" r="20" fill="#d3202a" stroke="#f9aa8f" stroke-width="2"/>
+                <circle cx="264" cy="24" r="20" fill="#00733e" stroke="#9bd3ae" stroke-width="2"/>
+            </g>
+            <rect x="136" y="380" width="240" height="40" rx="8" fill="url(#bgGrad)" opacity="0.8"/>
+            <text x="256" y="408" font-family="Arial, sans-serif" font-size="20" font-weight="bold"
+                  fill="url(#goldGrad)" text-anchor="middle">COMMANDER</text>
+        </svg>`;
+
+        function generateAll() {
+            const container = document.getElementById('icons');
+            container.innerHTML = '';
+
+            sizes.forEach(size => {
+                const div = document.createElement('div');
+                div.className = 'icon-preview';
+
+                const canvas = document.createElement('canvas');
+                canvas.width = size;
+                canvas.height = size;
+
+                const ctx = canvas.getContext('2d');
+                const img = new Image();
+                const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+                const url = URL.createObjectURL(blob);
+
+                img.onload = () => {
+                    ctx.drawImage(img, 0, 0, size, size);
+                    URL.revokeObjectURL(url);
+
+                    const link = document.createElement('a');
+                    link.href = canvas.toDataURL('image/png');
+                    link.download = `icon-${size}.png`;
+                    link.textContent = `Download icon-${size}.png`;
+                    div.appendChild(link);
+                };
+
+                img.src = url;
+
+                const label = document.createElement('div');
+                label.textContent = `${size}x${size}`;
+
+                div.appendChild(canvas);
+                div.appendChild(label);
+                container.appendChild(div);
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-const { ipcRenderer, shell } = require('electron');
+import { storage } from './storage-adapter.js';
 
 let commanders = [];
 let myDecks = [];
@@ -94,8 +94,9 @@ function showConfirmModal(title, message, confirmText = 'Delete') {
 
 // Load data on startup
 async function init() {
-    commanders = await ipcRenderer.invoke('get-commanders');
-    myDecks = await ipcRenderer.invoke('get-my-decks');
+    await storage.ready();
+    commanders = await storage.getCommanders();
+    myDecks = await storage.getMyDecks();
     console.log(`Loaded ${commanders.length} commanders`);
     displayDecks();
 }
@@ -359,7 +360,7 @@ document.getElementById('add-deck-form').addEventListener('submit', async (e) =>
         dateAdded: new Date().toISOString()
     };
 
-    myDecks = await ipcRenderer.invoke('save-deck', newDeck);
+    myDecks = await storage.saveDeck(newDeck);
 
     // Show success message
     const successMsg = document.getElementById('deck-success');
@@ -657,7 +658,7 @@ window.importMoxfieldDeckFromModal = async function(deckId) {
 
     try {
         const decklist = await fetchMoxfieldDeck(url);
-        myDecks = await ipcRenderer.invoke('update-deck', deckId, { decklist });
+        myDecks = await storage.updateDeck(deckId, { decklist });
 
         statusDiv.innerHTML = '<p style="color: var(--success);">✓ Decklist imported successfully!</p>';
 
@@ -763,7 +764,7 @@ window.importMoxfieldDeck = async function(deckId) {
         const decklist = await fetchMoxfieldDeck(url);
         
         // Update deck with decklist
-        myDecks = await ipcRenderer.invoke('update-deck', deckId, { decklist });
+        myDecks = await storage.updateDeck(deckId, { decklist });
         
         statusDiv.innerHTML = '<p style="color: #00b894;">✓ Decklist imported successfully!</p>';
         
@@ -789,7 +790,7 @@ window.deleteDeck = async function (deckId) {
     );
 
     if (confirmed) {
-        myDecks = await ipcRenderer.invoke('delete-deck', deckId);
+        myDecks = await storage.deleteDeck(deckId);
         displayDecks();
 
         const successMsg = document.getElementById('deck-success');
@@ -811,7 +812,7 @@ window.openEDHREC = function (commanderName) {
         .replace(/[^a-z0-9-]/g, ''); // Remove any other special characters
 
     const url = `https://edhrec.com/commanders/${urlName}`;
-    shell.openExternal(url);
+    storage.openExternal(url);
 };
 
 // Toggle deck archive status (retire/restore)
@@ -819,7 +820,7 @@ window.toggleDeckArchive = async function (deckId) {
     const deck = myDecks.find(d => d.id === deckId);
     const isCurrentlyArchived = deck?.archived;
 
-    myDecks = await ipcRenderer.invoke('toggle-deck-archive', deckId);
+    myDecks = await storage.toggleDeckArchive(deckId);
     displayDecks();
 
     const successMsg = document.getElementById('deck-success');
@@ -1234,7 +1235,7 @@ document.getElementById('log-game-form').addEventListener('submit', async (e) =>
         totalPlayers: opponents.length + 1
     };
 
-    await ipcRenderer.invoke('save-game', newGame);
+    await storage.saveGame(newGame);
 
     // Show success message
     const successMsg = document.getElementById('game-success');
@@ -1272,7 +1273,7 @@ let gameFilters = {
 };
 
 async function loadGameHistory() {
-    allGames = await ipcRenderer.invoke('get-games');
+    allGames = await storage.getGames();
     await populateDeckFilter();
     displayGameHistory();
 }
@@ -1505,7 +1506,7 @@ window.deleteGame = async function (gameId) {
     );
 
     if (confirmed) {
-        allGames = await ipcRenderer.invoke('delete-game', gameId);
+        allGames = await storage.deleteGame(gameId);
         displayGameHistory();
 
         const successMsg = document.getElementById('history-success');
@@ -1517,7 +1518,7 @@ window.deleteGame = async function (gameId) {
 
 // Export functionality
 document.getElementById('export-csv').addEventListener('click', async () => {
-    const result = await ipcRenderer.invoke('export-to-csv');
+    const result = await storage.exportToCsv();
 
     const successMsg = document.getElementById('history-success');
     if (result.success) {
@@ -1532,7 +1533,7 @@ document.getElementById('export-csv').addEventListener('click', async () => {
 });
 
 document.getElementById('export-json').addEventListener('click', async () => {
-    const result = await ipcRenderer.invoke('export-to-json');
+    const result = await storage.exportToJson();
 
     const successMsg = document.getElementById('history-success');
     if (result.success) {
@@ -1556,7 +1557,7 @@ let chartInstances = {};
 let selectedYear = 'lifetime';
 
 async function loadStatistics() {
-    allGames = await ipcRenderer.invoke('get-games');
+    allGames = await storage.getGames();
     populateYearFilter();
     calculateAndDisplayStats();
 }

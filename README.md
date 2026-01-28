@@ -1,12 +1,22 @@
 # MTG Commander Tracker
 
-A desktop application for tracking your Magic: The Gathering Commander (EDH) games, deck performance, and statistics.
+Track your Magic: The Gathering Commander (EDH) games, deck performance, and statistics. Available as a **desktop app** or **web app (PWA)**.
 
 ![Electron](https://img.shields.io/badge/Electron-40.0.0-47848F?logo=electron&logoColor=white)
-![Platform](https://img.shields.io/badge/Platform-Windows-0078D6?logo=windows&logoColor=white)
+![PWA](https://img.shields.io/badge/PWA-Ready-5A0FC8?logo=pwa&logoColor=white)
+![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Web-0078D6?logo=windows&logoColor=white)
 ![License](https://img.shields.io/badge/License-ISC-blue)
 
-### Download
+## Download / Use
+
+### Web App (PWA) - Recommended for Mobile
+**[Launch Web App](https://curiousfrost.github.io/MTG_Commander_Tracker_App/)**
+
+- Works on any device with a browser (phone, tablet, computer)
+- Can be installed to your home screen for app-like experience
+- Works offline after first load
+
+### Desktop App (Windows)
 Download the latest portable `.exe` from the [Releases](https://github.com/CuriousFrost/MTG_Commander_Tracker_App/releases) page.
 
 No installation required - just run the executable!
@@ -76,16 +86,20 @@ No installation required - just run the executable!
    npm start
    ```
 
-4. Build the executable:
-   ```bash
-   npm run build
-   ```
-   The portable `.exe` will be created in the `dist/` folder.
+### Build Commands
+
+| Command | Description |
+|---------|-------------|
+| `npm run build:electron` | Build Windows desktop `.exe` (output: `dist/`) |
+| `npm run build:pwa` | Build PWA for web deployment (output: `pwa-dist/`) |
+| `npm run serve:pwa` | Serve PWA locally for testing |
+| `npm run generate-icons` | Regenerate PWA icons from SVG |
 
 ## Tech Stack
 
-- **Framework:** [Electron](https://www.electronjs.org/) 40.0.0
-- **Build Tool:** [electron-builder](https://www.electron.build/)
+- **Desktop:** [Electron](https://www.electronjs.org/) 40.0.0
+- **PWA:** Service Workers + IndexedDB
+- **Build Tools:** [electron-builder](https://www.electron.build/), [sharp](https://sharp.pixelplumbing.com/) (icons)
 - **Charts:** [Chart.js](https://www.chartjs.org/) 3.9.1
 - **Icons:** [Mana Font](https://mana.andrewgioia.com/) for MTG mana symbols
 - **APIs:**
@@ -94,12 +108,32 @@ No installation required - just run the executable!
 
 ## Data Storage
 
-All data is stored locally in JSON files:
-- `commanders.json` - Cached commander data from Scryfall
-- `myDecks.json` - Your deck collection (not tracked in git)
-- `games.json` - Your game history (not tracked in git)
+Your personal data never leaves your device - there is no cloud sync or account required.
 
-Your personal data never leaves your machine.
+### Desktop App (Electron)
+Data is stored locally in JSON files in the app folder:
+- `commanders.json` - Cached commander data from Scryfall
+- `myDecks.json` - Your deck collection
+- `games.json` - Your game history
+
+### Web App (PWA)
+Data is stored in your browser's **IndexedDB** database:
+- Stored locally on your device, specific to that browser
+- **Does NOT sync** across devices or browsers
+- Persists until you clear browser data or uninstall the PWA
+
+### Important for PWA Users
+
+| Scenario | What Happens |
+|----------|--------------|
+| Switching phones/computers | Start fresh - data doesn't transfer |
+| Clearing browser data | **Deletes all your data** |
+| Uninstalling the PWA | May delete your data (browser-dependent) |
+| Using a different browser | Separate data - browsers don't share |
+
+### Backing Up Your Data
+
+**Always export your data regularly!** Use the **Export to JSON** button in Game History to save a backup file. This backup can be kept safely and used to restore your data if needed.
 
 ## Contributing
 

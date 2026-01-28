@@ -99,6 +99,16 @@ ipcMain.handle('update-deck', (event, deckId, updates) => {
   return decks;
 });
 
+ipcMain.handle('toggle-deck-archive', (event, deckId) => {
+  const decks = loadJsonFile(MY_DECKS_FILE);
+  const deckIndex = decks.findIndex(d => d.id === deckId);
+  if (deckIndex !== -1) {
+    decks[deckIndex].archived = !decks[deckIndex].archived;
+    saveJsonFile(MY_DECKS_FILE, decks);
+  }
+  return decks;
+});
+
 // Export data
 ipcMain.handle('export-to-csv', async (event) => {
   const games = loadJsonFile(GAMES_FILE);

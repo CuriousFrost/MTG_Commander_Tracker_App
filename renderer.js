@@ -1,8 +1,69 @@
-const { ipcRenderer } = require('electron');
+const { ipcRenderer, shell } = require('electron');
 
 let commanders = [];
 let myDecks = [];
 let selectedCommander = null;
+let showArchivedDecks = false;
+
+// Custom confirmation modal
+function showConfirmModal(title, message, confirmText = 'Delete') {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('confirm-modal');
+        const titleEl = document.getElementById('confirm-modal-title');
+        const messageEl = document.getElementById('confirm-modal-message');
+        const confirmBtn = document.getElementById('confirm-modal-confirm');
+        const cancelBtn = document.getElementById('confirm-modal-cancel');
+
+        titleEl.textContent = title;
+        messageEl.textContent = message;
+        confirmBtn.textContent = confirmText;
+
+        modal.style.display = 'flex';
+
+        const cleanup = () => {
+            modal.style.display = 'none';
+            confirmBtn.removeEventListener('click', onConfirm);
+            cancelBtn.removeEventListener('click', onCancel);
+            modal.removeEventListener('click', onOverlayClick);
+            document.removeEventListener('keydown', onKeydown);
+        };
+
+        const onConfirm = () => {
+            cleanup();
+            resolve(true);
+        };
+
+        const onCancel = () => {
+            cleanup();
+            resolve(false);
+        };
+
+        const onOverlayClick = (e) => {
+            if (e.target === modal) {
+                cleanup();
+                resolve(false);
+            }
+        };
+
+        const onKeydown = (e) => {
+            if (e.key === 'Escape') {
+                cleanup();
+                resolve(false);
+            } else if (e.key === 'Enter') {
+                cleanup();
+                resolve(true);
+            }
+        };
+
+        confirmBtn.addEventListener('click', onConfirm);
+        cancelBtn.addEventListener('click', onCancel);
+        modal.addEventListener('click', onOverlayClick);
+        document.addEventListener('keydown', onKeydown);
+
+        // Focus the cancel button by default (safer option)
+        cancelBtn.focus();
+    });
+}
 
 // Load data on startup
 async function init() {
@@ -291,15 +352,46 @@ document.getElementById('add-deck-form').addEventListener('submit', async (e) =>
 async function displayDecks() {
     const deckList = document.getElementById('deck-list');
 
+    // Count active and archived decks
+    const activeDecks = myDecks.filter(d => !d.archived);
+    const archivedDecks = myDecks.filter(d => d.archived);
+
     if (myDecks.length === 0) {
         deckList.innerHTML = '<h2 style="margin-top: 30px;">Your Decks</h2><p>No decks added yet.</p>';
         return;
     }
 
-    // Start with loading state
-    deckList.innerHTML = '<h2 style="margin-top: 30px;">Your Decks</h2><p>Loading deck images...</p>';
+    // Filter decks based on showArchivedDecks toggle
+    const decksToShow = showArchivedDecks ? myDecks : activeDecks;
 
-    const decksHtml = await Promise.all(myDecks.map(async deck => {
+    // Start with loading state and toggle
+    const toggleHtml = archivedDecks.length > 0 ? `
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: #b0b3c1; text-transform: none; font-size: 14px;">
+                <input type="checkbox" id="show-archived-toggle" ${showArchivedDecks ? 'checked' : ''}
+                       style="width: 18px; height: 18px; cursor: pointer;">
+                Show retired decks (${archivedDecks.length})
+            </label>
+        </div>
+    ` : '';
+
+    deckList.innerHTML = '<h2 style="margin-top: 30px;">Your Decks</h2>' + toggleHtml + '<p>Loading deck images...</p>';
+
+    // Re-attach toggle listener
+    const toggleEl = document.getElementById('show-archived-toggle');
+    if (toggleEl) {
+        toggleEl.addEventListener('change', (e) => {
+            showArchivedDecks = e.target.checked;
+            displayDecks();
+        });
+    }
+
+    if (decksToShow.length === 0) {
+        deckList.innerHTML = '<h2 style="margin-top: 30px;">Your Decks</h2>' + toggleHtml + '<p>No active decks. Check "Show retired decks" to see archived commanders.</p>';
+        return;
+    }
+
+    const decksHtml = await Promise.all(decksToShow.map(async deck => {
         // Convert color identity to mana symbols
         let colorSymbols = '';
         if (deck.commander.colorIdentity.length === 0) {
@@ -319,42 +411,74 @@ async function displayDecks() {
 
         // Get commander image
         const imageUrl = await getCommanderImage(deck.commander.name);
-        const imageHtml = imageUrl 
-            ? `<img src="${imageUrl}" class="commander-image" alt="${deck.commander.name}">`
-            : `<div class="commander-image" style="background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 179, 71, 0.2)); display: flex; align-items: center; justify-content: center; font-size: 24px;">🎴</div>`;
 
         // Decklist section
         const hasDecklist = deck.decklist && Object.keys(deck.decklist).length > 0;
         const decklistButtonText = hasDecklist ? 'View Decklist' : 'Import from Moxfield';
-        
+        const isArchived = deck.archived;
+        const archiveButtonText = isArchived ? 'Restore' : 'Retire';
+        const archiveButtonStyle = isArchived
+            ? 'background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);'
+            : 'background: linear-gradient(135deg, #6c757d 0%, #495057 100%);';
+        const archivedClass = isArchived ? 'deck-card--archived' : '';
+        const archivedBadge = isArchived
+            ? '<span class="deck-card__badge">Retired</span>'
+            : '';
+
         return `
-            <div class="deck-item" style="flex-direction: column; align-items: stretch;">
-                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                    <div class="deck-item-info deck-item-with-image">
-                        ${imageHtml}
-                        <div>
-                            <strong>${deck.name}</strong><br>
-                            Commander: ${deck.commander.name}<br>
-                            <div style="margin-top: 8px;" class="mana-cost">Colors: ${colorSymbols}</div>
-                        </div>
+            <div class="deck-card ${archivedClass}">
+                <div class="deck-card__banner" style="background-image: url('${imageUrl || ''}');">
+                    <div class="deck-card__banner-overlay"></div>
+                </div>
+                <div class="deck-card__content">
+                    <div class="deck-card__info">
+                        <h3 class="deck-card__name">${deck.name}${archivedBadge}</h3>
+                        <p class="deck-card__commander">${deck.commander.name}</p>
+                        <div class="deck-card__colors mana-cost">${colorSymbols}</div>
                     </div>
-                    <div class="deck-item-actions">
-                        <button onclick="toggleDecklist(${deck.id})" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <div class="deck-card__actions">
+                        <button onclick="toggleDecklist(${deck.id})" class="btn-decklist">
                             ${decklistButtonText}
+                        </button>
+                        <button onclick="openEDHREC('${deck.commander.name.replace(/'/g, "\\'")}')" class="btn-edhrec">
+                            EDHREC
+                        </button>
+                        <button onclick="toggleDeckArchive(${deck.id})" style="${archiveButtonStyle}">
+                            ${archiveButtonText}
                         </button>
                         <button class="danger" onclick="deleteDeck(${deck.id})">Delete</button>
                     </div>
                 </div>
-                
+
                 <!-- Decklist section (hidden by default) -->
-                <div id="decklist-${deck.id}" style="display: none; margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255, 215, 0, 0.2);">
+                <div id="decklist-${deck.id}" class="deck-card__decklist">
                     ${hasDecklist ? renderDecklist(deck.decklist) : renderMoxfieldInput(deck.id)}
                 </div>
             </div>
         `;
     }));
 
-    deckList.innerHTML = `<h2 style="margin-top: 30px;">Your Decks</h2>` + decksHtml.join('');
+    // Rebuild toggle HTML for final render
+    const finalToggleHtml = archivedDecks.length > 0 ? `
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: #b0b3c1; text-transform: none; font-size: 14px;">
+                <input type="checkbox" id="show-archived-toggle" ${showArchivedDecks ? 'checked' : ''}
+                       style="width: 18px; height: 18px; cursor: pointer;">
+                Show retired decks (${archivedDecks.length})
+            </label>
+        </div>
+    ` : '';
+
+    deckList.innerHTML = `<h2 style="margin-top: 30px;">Your Decks</h2>` + finalToggleHtml + `<div class="deck-grid">${decksHtml.join('')}</div>`;
+
+    // Re-attach toggle listener after final render
+    const finalToggleEl = document.getElementById('show-archived-toggle');
+    if (finalToggleEl) {
+        finalToggleEl.addEventListener('change', (e) => {
+            showArchivedDecks = e.target.checked;
+            displayDecks();
+        });
+    }
 }
 
 // Render Moxfield input form
@@ -411,11 +535,8 @@ function renderDecklist(decklist) {
 // Toggle decklist visibility
 window.toggleDecklist = function(deckId) {
     const decklistDiv = document.getElementById(`decklist-${deckId}`);
-    if (decklistDiv.style.display === 'none') {
-        decklistDiv.style.display = 'block';
-    } else {
-        decklistDiv.style.display = 'none';
-    }
+    const isHidden = getComputedStyle(decklistDiv).display === 'none';
+    decklistDiv.style.display = isHidden ? 'block' : 'none';
 };
 
 // Import Moxfield deck
@@ -451,7 +572,16 @@ window.importMoxfieldDeck = async function(deckId) {
 
 // Delete deck
 window.deleteDeck = async function (deckId) {
-    if (confirm('Are you sure you want to delete this deck? This cannot be undone.')) {
+    const deck = myDecks.find(d => d.id === deckId);
+    const deckName = deck ? deck.name : 'this deck';
+
+    const confirmed = await showConfirmModal(
+        'Delete Deck',
+        `Are you sure you want to delete "${deckName}"? This will permanently remove the deck but keep your game history. This cannot be undone.`,
+        'Delete Deck'
+    );
+
+    if (confirmed) {
         myDecks = await ipcRenderer.invoke('delete-deck', deckId);
         displayDecks();
 
@@ -462,6 +592,37 @@ window.deleteDeck = async function (deckId) {
     }
 };
 
+// Open EDHREC page for a commander
+window.openEDHREC = function (commanderName) {
+    // Convert commander name to EDHREC URL format
+    // e.g., "Atraxa, Praetors' Voice" → "atraxa-praetors-voice"
+    const urlName = commanderName
+        .toLowerCase()
+        .replace(/[,']/g, '')        // Remove commas and apostrophes
+        .replace(/\s+/g, '-')        // Replace spaces with hyphens
+        .replace(/-+/g, '-')         // Replace multiple hyphens with single
+        .replace(/[^a-z0-9-]/g, ''); // Remove any other special characters
+
+    const url = `https://edhrec.com/commanders/${urlName}`;
+    shell.openExternal(url);
+};
+
+// Toggle deck archive status (retire/restore)
+window.toggleDeckArchive = async function (deckId) {
+    const deck = myDecks.find(d => d.id === deckId);
+    const isCurrentlyArchived = deck?.archived;
+
+    myDecks = await ipcRenderer.invoke('toggle-deck-archive', deckId);
+    displayDecks();
+
+    const successMsg = document.getElementById('deck-success');
+    successMsg.textContent = isCurrentlyArchived
+        ? '✓ Deck restored successfully!'
+        : '✓ Deck retired successfully!';
+    successMsg.classList.add('show');
+    setTimeout(() => successMsg.classList.remove('show'), 3000);
+};
+
 // Game logging functionality
 let opponentCount = 0;
 const maxOpponents = 5;
@@ -469,12 +630,15 @@ const maxOpponents = 5;
 // Set today's date as default
 document.getElementById('game-date').valueAsDate = new Date();
 
-// Load my decks into dropdown
+// Load my decks into dropdown (only active decks)
 function loadMyDecksDropdown() {
     const deckSelect = document.getElementById('my-deck');
     deckSelect.innerHTML = '<option value="">Select your deck...</option>';
 
-    myDecks.forEach(deck => {
+    // Only show active (non-archived) decks for game logging
+    const activeDecks = myDecks.filter(deck => !deck.archived);
+
+    activeDecks.forEach(deck => {
         const option = document.createElement('option');
         option.value = deck.id;
         option.textContent = `${deck.name} (${deck.commander.name})`;
@@ -926,7 +1090,16 @@ document.getElementById('clear-filters').addEventListener('click', () => {
 
 // Delete game
 window.deleteGame = async function (gameId) {
-    if (confirm('Are you sure you want to delete this game? This cannot be undone.')) {
+    const game = allGames.find(g => g.id === gameId);
+    const gameInfo = game ? `the game from ${game.date} with ${game.myDeck.name}` : 'this game';
+
+    const confirmed = await showConfirmModal(
+        'Delete Game',
+        `Are you sure you want to delete ${gameInfo}? This will affect your statistics. This cannot be undone.`,
+        'Delete Game'
+    );
+
+    if (confirmed) {
         allGames = await ipcRenderer.invoke('delete-game', gameId);
         displayGameHistory();
 

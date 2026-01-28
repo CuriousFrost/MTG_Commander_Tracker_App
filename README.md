@@ -6,6 +6,10 @@ A desktop application for tracking your Magic: The Gathering Commander (EDH) gam
 ![Platform](https://img.shields.io/badge/Platform-Windows-0078D6?logo=windows&logoColor=white)
 ![License](https://img.shields.io/badge/License-ISC-blue)
 
+### Download
+Download the latest portable `.exe` from the [Releases](https://github.com/CuriousFrost/MTG_Commander_Tracker_App/releases) page.
+
+No installation required - just run the executable!
 ## Features
 
 ### Deck Management
@@ -53,11 +57,6 @@ A desktop application for tracking your Magic: The Gathering Commander (EDH) gam
 *Coming soon*
 
 ## Installation
-
-### Download
-Download the latest portable `.exe` from the [Releases](https://github.com/CuriousFrost/MTG_Commander_Tracker_App/releases) page.
-
-No installation required - just run the executable!
 
 ### Build from Source
 

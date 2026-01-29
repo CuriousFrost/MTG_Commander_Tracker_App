@@ -1497,23 +1497,25 @@
             opacity: 0.9;
         }
 
-        .life-total {
-            font-size: 4em;
-            font-weight: 700;
-            line-height: 1;
-            margin: 10px 0;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        .life-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
         }
 
-        .life-buttons {
-            display: flex;
-            gap: 15px;
-            margin-top: 10px;
+        .life-total {
+            font-size: 5em;
+            font-weight: 700;
+            line-height: 1;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            min-width: 80px;
+            text-align: center;
         }
 
         .life-btn {
-            width: 55px;
-            height: 55px;
+            width: 50px;
+            height: 50px;
             border-radius: 12px;
             font-size: 2em;
             font-weight: 700;
@@ -1551,6 +1553,173 @@
 
         .player-card[data-player="3"] .life-btn.minus { color: #f87171; }
         .player-card[data-player="3"] .life-btn.plus { color: #4ade80; }
+
+        /* Color Schemes */
+        /* Classic (default) - MTG Mana Colors */
+        .life-counter-container[data-scheme="classic"] .player-card[data-player="1"],
+        .life-counter-container .player-card[data-player="1"] {
+            background: linear-gradient(135deg, #f8f4e8 0%, #e8e4d8 100%);
+            border: 3px solid #d4c9a8;
+            color: #2d2d2d;
+        }
+        .life-counter-container[data-scheme="classic"] .player-card[data-player="2"],
+        .life-counter-container .player-card[data-player="2"] {
+            background: linear-gradient(135deg, #0e6fae 0%, #0a5a8c 100%);
+            border: 3px solid #0a4d78;
+            color: #ffffff;
+        }
+        .life-counter-container[data-scheme="classic"] .player-card[data-player="3"],
+        .life-counter-container .player-card[data-player="3"] {
+            background: linear-gradient(135deg, #3d3d3d 0%, #2d2d2d 100%);
+            border: 3px solid #1d1d1d;
+            color: #e0e0e0;
+        }
+        .life-counter-container[data-scheme="classic"] .player-card[data-player="4"],
+        .life-counter-container .player-card[data-player="4"] {
+            background: linear-gradient(135deg, #c73e3a 0%, #a32e2a 100%);
+            border: 3px solid #8a2422;
+            color: #ffffff;
+        }
+        .life-counter-container[data-scheme="classic"] .player-card[data-player="5"],
+        .life-counter-container .player-card[data-player="5"] {
+            background: linear-gradient(135deg, #1e7d32 0%, #155724 100%);
+            border: 3px solid #0d3d15;
+            color: #ffffff;
+        }
+        .life-counter-container[data-scheme="classic"] .player-card[data-player="6"],
+        .life-counter-container .player-card[data-player="6"] {
+            background: linear-gradient(135deg, #c9a227 0%, #a8871f 100%);
+            border: 3px solid #8a6f1a;
+            color: #2d2d2d;
+        }
+
+        /* Neon */
+        .life-counter-container[data-scheme="neon"] .player-card[data-player="1"] {
+            background: linear-gradient(135deg, #ff00ff 0%, #cc00cc 100%);
+            border: 3px solid #ff66ff;
+            color: #ffffff;
+        }
+        .life-counter-container[data-scheme="neon"] .player-card[data-player="2"] {
+            background: linear-gradient(135deg, #00ffff 0%, #00cccc 100%);
+            border: 3px solid #66ffff;
+            color: #000000;
+        }
+        .life-counter-container[data-scheme="neon"] .player-card[data-player="3"] {
+            background: linear-gradient(135deg, #ff6600 0%, #cc5200 100%);
+            border: 3px solid #ff9933;
+            color: #ffffff;
+        }
+        .life-counter-container[data-scheme="neon"] .player-card[data-player="4"] {
+            background: linear-gradient(135deg, #00ff00 0%, #00cc00 100%);
+            border: 3px solid #66ff66;
+            color: #000000;
+        }
+        .life-counter-container[data-scheme="neon"] .player-card[data-player="5"] {
+            background: linear-gradient(135deg, #ffff00 0%, #cccc00 100%);
+            border: 3px solid #ffff66;
+            color: #000000;
+        }
+        .life-counter-container[data-scheme="neon"] .player-card[data-player="6"] {
+            background: linear-gradient(135deg, #ff0066 0%, #cc0052 100%);
+            border: 3px solid #ff3385;
+            color: #ffffff;
+        }
+
+        /* Pastel */
+        .life-counter-container[data-scheme="pastel"] .player-card[data-player="1"] {
+            background: linear-gradient(135deg, #ffb3ba 0%, #ff9aa2 100%);
+            border: 3px solid #ff8a94;
+            color: #4a2c2c;
+        }
+        .life-counter-container[data-scheme="pastel"] .player-card[data-player="2"] {
+            background: linear-gradient(135deg, #bae1ff 0%, #a2d2ff 100%);
+            border: 3px solid #8ac4ff;
+            color: #2c3e4a;
+        }
+        .life-counter-container[data-scheme="pastel"] .player-card[data-player="3"] {
+            background: linear-gradient(135deg, #baffc9 0%, #a2ffb3 100%);
+            border: 3px solid #8aff9c;
+            color: #2c4a32;
+        }
+        .life-counter-container[data-scheme="pastel"] .player-card[data-player="4"] {
+            background: linear-gradient(135deg, #ffffba 0%, #ffffa2 100%);
+            border: 3px solid #ffff8a;
+            color: #4a4a2c;
+        }
+        .life-counter-container[data-scheme="pastel"] .player-card[data-player="5"] {
+            background: linear-gradient(135deg, #e2baff 0%, #d4a2ff 100%);
+            border: 3px solid #c68aff;
+            color: #3e2c4a;
+        }
+        .life-counter-container[data-scheme="pastel"] .player-card[data-player="6"] {
+            background: linear-gradient(135deg, #ffdfba 0%, #ffd1a2 100%);
+            border: 3px solid #ffc38a;
+            color: #4a3c2c;
+        }
+
+        /* Earth */
+        .life-counter-container[data-scheme="earth"] .player-card[data-player="1"] {
+            background: linear-gradient(135deg, #8b4513 0%, #6b3410 100%);
+            border: 3px solid #5a2d0e;
+            color: #ffffff;
+        }
+        .life-counter-container[data-scheme="earth"] .player-card[data-player="2"] {
+            background: linear-gradient(135deg, #556b2f 0%, #3d4f22 100%);
+            border: 3px solid #2f3d1a;
+            color: #ffffff;
+        }
+        .life-counter-container[data-scheme="earth"] .player-card[data-player="3"] {
+            background: linear-gradient(135deg, #4682b4 0%, #366a94 100%);
+            border: 3px solid #2d587a;
+            color: #ffffff;
+        }
+        .life-counter-container[data-scheme="earth"] .player-card[data-player="4"] {
+            background: linear-gradient(135deg, #bc8f8f 0%, #a67b7b 100%);
+            border: 3px solid #8f6666;
+            color: #2d2d2d;
+        }
+        .life-counter-container[data-scheme="earth"] .player-card[data-player="5"] {
+            background: linear-gradient(135deg, #daa520 0%, #b8891a 100%);
+            border: 3px solid #967014;
+            color: #2d2d2d;
+        }
+        .life-counter-container[data-scheme="earth"] .player-card[data-player="6"] {
+            background: linear-gradient(135deg, #708090 0%, #5a6a78 100%);
+            border: 3px solid #48555f;
+            color: #ffffff;
+        }
+
+        /* Mono */
+        .life-counter-container[data-scheme="mono"] .player-card[data-player="1"] {
+            background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+            border: 3px solid #cccccc;
+            color: #1a1a1a;
+        }
+        .life-counter-container[data-scheme="mono"] .player-card[data-player="2"] {
+            background: linear-gradient(135deg, #cccccc 0%, #b3b3b3 100%);
+            border: 3px solid #999999;
+            color: #1a1a1a;
+        }
+        .life-counter-container[data-scheme="mono"] .player-card[data-player="3"] {
+            background: linear-gradient(135deg, #999999 0%, #808080 100%);
+            border: 3px solid #666666;
+            color: #ffffff;
+        }
+        .life-counter-container[data-scheme="mono"] .player-card[data-player="4"] {
+            background: linear-gradient(135deg, #666666 0%, #4d4d4d 100%);
+            border: 3px solid #333333;
+            color: #ffffff;
+        }
+        .life-counter-container[data-scheme="mono"] .player-card[data-player="5"] {
+            background: linear-gradient(135deg, #4d4d4d 0%, #333333 100%);
+            border: 3px solid #1a1a1a;
+            color: #ffffff;
+        }
+        .life-counter-container[data-scheme="mono"] .player-card[data-player="6"] {
+            background: linear-gradient(135deg, #1a1a1a 0%, #000000 100%);
+            border: 3px solid #000000;
+            color: #ffffff;
+        }
 
         .commander-damage-btn {
             display: flex;
@@ -1703,6 +1872,37 @@
             border-color: var(--accent);
         }
 
+        /* Color Scheme Selector */
+        .color-scheme-selector {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .scheme-btn {
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            background: var(--bg-input);
+            border: 2px solid var(--border-color);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .scheme-btn:hover {
+            border-color: var(--accent);
+            transform: scale(1.05);
+        }
+
+        .scheme-btn.active {
+            background: var(--accent);
+            color: var(--bg-primary);
+            border-color: var(--accent);
+        }
+
         /* Commander Damage Modal */
         .commander-damage-modal-content {
             max-width: 400px;
@@ -1829,7 +2029,7 @@
                 border-radius: 8px;
             }
 
-            .life-buttons {
+            .life-row {
                 gap: 10px;
                 margin-top: 5px;
             }
@@ -1899,7 +2099,7 @@
                 font-size: 1.2em;
             }
 
-            .life-buttons {
+            .life-row {
                 gap: 8px;
                 margin-top: 3px;
             }
@@ -1977,7 +2177,7 @@
                 border-radius: 6px;
             }
 
-            .life-buttons {
+            .life-row {
                 gap: 8px;
                 margin-top: 2px;
             }
@@ -2393,6 +2593,16 @@
                     <button class="player-count-btn active" data-count="4">4</button>
                     <button class="player-count-btn" data-count="5">5</button>
                     <button class="player-count-btn" data-count="6">6</button>
+                </div>
+            </div>
+            <div class="form-group" style="margin-top: 20px;">
+                <label>Color Scheme</label>
+                <div class="color-scheme-selector">
+                    <button class="scheme-btn active" data-scheme="classic" title="Classic MTG">Classic</button>
+                    <button class="scheme-btn" data-scheme="neon" title="Neon">Neon</button>
+                    <button class="scheme-btn" data-scheme="pastel" title="Pastel">Pastel</button>
+                    <button class="scheme-btn" data-scheme="earth" title="Earth Tones">Earth</button>
+                    <button class="scheme-btn" data-scheme="mono" title="Monochrome">Mono</button>
                 </div>
             </div>
             <div class="modal-actions" style="margin-top: 24px;">

@@ -2315,7 +2315,8 @@ async function calculateMostFacedCommanders(games) {
 let lifeCounterState = {
     playerCount: 4,
     players: [],
-    initialized: false
+    initialized: false,
+    colorScheme: 'classic'
 };
 
 const STARTING_LIFE = 40;
@@ -2341,6 +2342,7 @@ function renderLifeCounter() {
     if (!container) return;
 
     container.setAttribute('data-players', lifeCounterState.playerCount);
+    container.setAttribute('data-scheme', lifeCounterState.colorScheme);
 
     // Determine which players are rotated based on player count
     const rotatedPlayers = getRotatedPlayers(lifeCounterState.playerCount);
@@ -2358,9 +2360,9 @@ function renderLifeCounter() {
         return `
             <div class="player-card ${rotatedClass} ${eliminatedClass}" data-player="${player.id}">
                 <button class="rotate-player-btn" onclick="event.stopPropagation(); togglePlayerRotation(${player.id})" title="Rotate player">&#8635;</button>
-                <div class="life-total">${player.life}</div>
-                <div class="life-buttons">
+                <div class="life-row">
                     <button class="life-btn minus" onclick="event.stopPropagation(); adjustLife(${player.id}, -1)">-</button>
+                    <div class="life-total">${player.life}</div>
                     <button class="life-btn plus" onclick="event.stopPropagation(); adjustLife(${player.id}, 1)">+</button>
                 </div>
                 <button class="commander-damage-btn" onclick="openCommanderDamagePopup(${player.id})">
@@ -2496,6 +2498,16 @@ function setPlayerCount(count) {
     });
 }
 
+function setColorScheme(scheme) {
+    lifeCounterState.colorScheme = scheme;
+    renderLifeCounter();
+
+    // Update active button in settings
+    document.querySelectorAll('.scheme-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.scheme === scheme);
+    });
+}
+
 // Life Counter event listeners
 document.addEventListener('DOMContentLoaded', () => {
     // Settings button
@@ -2536,6 +2548,14 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.addEventListener('click', () => {
             const count = parseInt(btn.dataset.count);
             setPlayerCount(count);
+        });
+    });
+
+    // Color scheme buttons
+    document.querySelectorAll('.scheme-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const scheme = btn.dataset.scheme;
+            setColorScheme(scheme);
         });
     });
 

@@ -4,6 +4,83 @@ let commanders = [];
 let myDecks = [];
 let selectedCommander = null;
 let showArchivedDecks = false;
+let podBuddies = [];
+
+// Pod Buddies Management
+function loadPodBuddies() {
+    const saved = localStorage.getItem('podBuddies');
+    podBuddies = saved ? JSON.parse(saved) : [];
+    return podBuddies;
+}
+
+function savePodBuddies() {
+    localStorage.setItem('podBuddies', JSON.stringify(podBuddies));
+}
+
+function addPodBuddy(name) {
+    const trimmedName = name.trim();
+    if (!trimmedName) return false;
+    if (podBuddies.some(b => b.toLowerCase() === trimmedName.toLowerCase())) {
+        return false; // Already exists
+    }
+    podBuddies.push(trimmedName);
+    savePodBuddies();
+    return true;
+}
+
+function removePodBuddy(name) {
+    podBuddies = podBuddies.filter(b => b !== name);
+    savePodBuddies();
+}
+
+function renderBuddiesList() {
+    const container = document.getElementById('buddies-list');
+    if (podBuddies.length === 0) {
+        container.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 20px;">No buddies added yet</p>';
+        return;
+    }
+
+    container.innerHTML = podBuddies.map(buddy => `
+        <div class="buddy-item">
+            <span class="buddy-name">${buddy}</span>
+            <button type="button" class="delete-buddy-btn" data-buddy="${buddy}">✕ Remove</button>
+        </div>
+    `).join('');
+
+    // Add delete handlers
+    container.querySelectorAll('.delete-buddy-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const buddyName = e.target.dataset.buddy;
+            removePodBuddy(buddyName);
+            renderBuddiesList();
+            populateBuddyFilter();
+        });
+    });
+}
+
+function renderBuddySelectList() {
+    const container = document.getElementById('buddy-select-list');
+    if (podBuddies.length === 0) {
+        container.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 20px;">No buddies available. Add some in Pod Buddies first!</p>';
+        return;
+    }
+
+    container.innerHTML = podBuddies.map(buddy => `
+        <div class="buddy-select-item" data-buddy="${buddy}">
+            <span class="buddy-name">${buddy}</span>
+            <span style="color: var(--accent);">→</span>
+        </div>
+    `).join('');
+
+    // Add click handlers
+    container.querySelectorAll('.buddy-select-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+            const buddyName = e.currentTarget.dataset.buddy;
+            addOpponentFieldWithBuddy(buddyName);
+            closeBuddySelectModal();
+        });
+    });
+}
 
 // Theme management
 function initTheme() {
@@ -993,6 +1070,41 @@ function addOpponentField() {
     updateAddOpponentButton();
 }
 
+// Add opponent field with buddy name pre-attached
+function addOpponentFieldWithBuddy(buddyName) {
+    if (opponentCount >= maxOpponents) {
+        alert('Maximum 5 opponents allowed');
+        return;
+    }
+
+    opponentCount++;
+    const container = document.getElementById('opponents-container');
+
+    const opponentDiv = document.createElement('div');
+    opponentDiv.className = 'form-group';
+    opponentDiv.id = `opponent-${opponentCount}`;
+    opponentDiv.innerHTML = `
+    <label for="opponent-${opponentCount}-input">
+        <span style="color: var(--accent); font-weight: bold;">${buddyName}'s</span> Commander
+    </label>
+    <div class="autocomplete-container">
+      <input type="text"
+             id="opponent-${opponentCount}-input"
+             class="opponent-input"
+             data-opponent="${opponentCount}"
+             data-buddy="${buddyName}"
+             autocomplete="off"
+             placeholder="Start typing commander name...">
+      <div id="opponent-${opponentCount}-results" class="autocomplete-results"></div>
+    </div>
+    <button type="button" onclick="removeOpponent(${opponentCount})" style="margin-top: 10px; background: #e74c3c;">Remove</button>
+  `;
+
+    container.appendChild(opponentDiv);
+    setupOpponentAutocomplete(opponentCount);
+    updateAddOpponentButton();
+}
+
 // Remove opponent field
 window.removeOpponent = function (num) {
     const opponentDiv = document.getElementById(`opponent-${num}`);
@@ -1003,13 +1115,16 @@ window.removeOpponent = function (num) {
     }
 };
 
-// Update add opponent button visibility
+// Update add opponent/buddy button visibility
 function updateAddOpponentButton() {
     const addButton = document.getElementById('add-opponent');
+    const addBuddyBtn = document.getElementById('add-buddy-btn');
     if (opponentCount >= maxOpponents) {
         addButton.style.display = 'none';
+        if (addBuddyBtn) addBuddyBtn.style.display = 'none';
     } else {
         addButton.style.display = 'inline-block';
+        if (addBuddyBtn) addBuddyBtn.style.display = 'inline-block';
     }
 }
 
@@ -1112,6 +1227,84 @@ function setupOpponentAutocomplete(num) {
 
 // Add opponent button
 document.getElementById('add-opponent').addEventListener('click', addOpponentField);
+
+// Pod Buddies Modal Functions
+function openPodBuddiesModal() {
+    loadPodBuddies();
+    renderBuddiesList();
+    document.getElementById('pod-buddies-modal').style.display = 'flex';
+    document.getElementById('new-buddy-name').value = '';
+    document.getElementById('new-buddy-name').focus();
+}
+
+function closePodBuddiesModal() {
+    document.getElementById('pod-buddies-modal').style.display = 'none';
+}
+
+function openBuddySelectModal() {
+    loadPodBuddies();
+    renderBuddySelectList();
+    document.getElementById('add-buddy-modal').style.display = 'flex';
+}
+
+function closeBuddySelectModal() {
+    document.getElementById('add-buddy-modal').style.display = 'none';
+}
+
+// Pod Buddies Event Listeners
+document.getElementById('manage-buddies-btn').addEventListener('click', openPodBuddiesModal);
+
+document.getElementById('pod-buddies-close-btn').addEventListener('click', closePodBuddiesModal);
+
+document.getElementById('pod-buddies-modal').addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) {
+        closePodBuddiesModal();
+    }
+});
+
+document.getElementById('add-new-buddy-btn').addEventListener('click', () => {
+    const input = document.getElementById('new-buddy-name');
+    const name = input.value.trim();
+    if (name) {
+        if (addPodBuddy(name)) {
+            renderBuddiesList();
+            populateBuddyFilter();
+            input.value = '';
+            input.focus();
+        } else {
+            alert('Buddy already exists or name is invalid');
+        }
+    }
+});
+
+document.getElementById('new-buddy-name').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        document.getElementById('add-new-buddy-btn').click();
+    }
+});
+
+// Add Buddy to Game Modal
+document.getElementById('add-buddy-btn').addEventListener('click', () => {
+    loadPodBuddies();
+    if (podBuddies.length === 0) {
+        alert('No Pod Buddies yet! Add some first using the Pod Buddies button.');
+        return;
+    }
+    if (opponentCount >= maxOpponents) {
+        alert('Maximum 5 opponents allowed');
+        return;
+    }
+    openBuddySelectModal();
+});
+
+document.getElementById('add-buddy-cancel-btn').addEventListener('click', closeBuddySelectModal);
+
+document.getElementById('add-buddy-modal').addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) {
+        closeBuddySelectModal();
+    }
+});
 
 // Winning commander selection
 let selectedWinningCommander = null;
@@ -1315,12 +1508,17 @@ document.getElementById('log-game-form').addEventListener('submit', async (e) =>
         return;
     }
 
-    // Collect opponents
+    // Collect opponents (including buddy name if present)
     const opponents = [];
     for (let i = 1; i <= opponentCount; i++) {
         const input = document.getElementById(`opponent-${i}-input`);
         if (input && input.dataset.selected) {
-            opponents.push(JSON.parse(input.dataset.selected));
+            const opponent = JSON.parse(input.dataset.selected);
+            // Add buddy name if this opponent was added via Pod Buddy
+            if (input.dataset.buddy) {
+                opponent.buddyName = input.dataset.buddy;
+            }
+            opponents.push(opponent);
         }
     }
 
@@ -1877,10 +2075,12 @@ document.querySelector('[data-tab="game-history"]').addEventListener('click', ()
 // Statistics functionality
 let chartInstances = {};
 let selectedYear = 'lifetime';
+let selectedBuddy = 'all';
 
 async function loadStatistics() {
     allGames = await storage.getGames();
     populateYearFilter();
+    populateBuddyFilter();
     calculateAndDisplayStats();
 }
 
@@ -1907,6 +2107,47 @@ function populateYearFilter() {
     yearFilter.value = selectedYear;
 }
 
+function populateBuddyFilter() {
+    const buddyFilter = document.getElementById('buddy-filter');
+    loadPodBuddies();
+
+    // Also collect buddies from past games that might not be in the current list
+    const buddiesInGames = new Set();
+    allGames.forEach(game => {
+        if (game.opponents) {
+            game.opponents.forEach(opp => {
+                if (opp.buddyName) {
+                    buddiesInGames.add(opp.buddyName);
+                }
+            });
+        }
+    });
+
+    // Combine pod buddies and game buddies
+    const allBuddies = new Set([...podBuddies, ...buddiesInGames]);
+    const sortedBuddies = Array.from(allBuddies).sort((a, b) => a.localeCompare(b));
+
+    // Build options
+    let options = '<option value="all">All Opponents</option>';
+    sortedBuddies.forEach(buddy => {
+        options += `<option value="${buddy}">${buddy}</option>`;
+    });
+
+    buddyFilter.innerHTML = options;
+    buddyFilter.value = selectedBuddy;
+}
+
+function filterGamesByBuddy(games, buddy) {
+    if (buddy === 'all') {
+        return games;
+    }
+
+    return games.filter(game => {
+        if (!game.opponents) return false;
+        return game.opponents.some(opp => opp.buddyName === buddy);
+    });
+}
+
 function filterGamesByYear(games, year) {
     if (year === 'lifetime') {
         return games;
@@ -1925,8 +2166,12 @@ function calculateAndDisplayStats() {
     });
     chartInstances = {};
 
-    // Filter games by selected year
-    const filteredGames = filterGamesByYear(allGames, selectedYear);
+    // Filter games by selected year and buddy
+    let filteredGames = filterGamesByYear(allGames, selectedYear);
+    filteredGames = filterGamesByBuddy(filteredGames, selectedBuddy);
+
+    // Update filter info display
+    const filterInfo = selectedBuddy !== 'all' ? ` (vs ${selectedBuddy})` : '';
 
     if (filteredGames.length === 0) {
         document.getElementById('total-games').textContent = '0';
@@ -1979,6 +2224,9 @@ function calculateAndDisplayStats() {
 
     // Calculate most faced commanders
     calculateMostFacedCommanders(filteredGames);
+
+    // Show buddy-specific stats if filtering by buddy
+    displayBuddyStats(filteredGames, selectedBuddy);
 
     // Create Win/Loss Pie Chart
     createWinLossChart(totalWins, totalLosses);
@@ -2375,6 +2623,12 @@ document.getElementById('year-filter').addEventListener('change', (e) => {
     calculateAndDisplayStats();
 });
 
+// Buddy filter change handler
+document.getElementById('buddy-filter').addEventListener('change', (e) => {
+    selectedBuddy = e.target.value;
+    calculateAndDisplayStats();
+});
+
 // Load statistics when switching to statistics tab
 document.querySelector('[data-tab="statistics"]').addEventListener('click', () => {
     loadStatistics();
@@ -2455,6 +2709,83 @@ function calculateStreaks(games) {
 
     document.getElementById('best-streak').innerHTML = `${bestStreak}${bestStreakType}`;
     document.getElementById('best-streak').style.color = bestStreakColor;
+}
+
+// Display buddy-specific stats when filtering by a buddy
+function displayBuddyStats(games, buddy) {
+    const section = document.getElementById('buddy-stats-section');
+    const nameEl = document.getElementById('buddy-stats-name');
+    const listEl = document.getElementById('buddy-commanders-list');
+
+    if (buddy === 'all') {
+        section.style.display = 'none';
+        return;
+    }
+
+    // Show the section
+    section.style.display = 'block';
+    nameEl.textContent = buddy;
+
+    // Collect commanders this buddy has played
+    const buddyCommanders = {};
+
+    games.forEach(game => {
+        if (game.opponents) {
+            game.opponents.forEach(opp => {
+                if (opp.buddyName === buddy) {
+                    const cmdName = opp.name;
+                    if (!buddyCommanders[cmdName]) {
+                        buddyCommanders[cmdName] = {
+                            name: cmdName,
+                            count: 0,
+                            colorIdentity: opp.colorIdentity || [],
+                            wins: 0,
+                            losses: 0
+                        };
+                    }
+                    buddyCommanders[cmdName].count++;
+                    if (game.won) {
+                        buddyCommanders[cmdName].wins++;
+                    } else {
+                        buddyCommanders[cmdName].losses++;
+                    }
+                }
+            });
+        }
+    });
+
+    const sortedCommanders = Object.values(buddyCommanders).sort((a, b) => b.count - a.count);
+
+    if (sortedCommanders.length === 0) {
+        listEl.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 20px;">No commander data for this buddy</p>';
+        return;
+    }
+
+    // Helper to render color symbols
+    function getColorSymbols(colorIdentity) {
+        if (!colorIdentity || colorIdentity.length === 0) {
+            return '<i class="ms ms-c mana"></i>';
+        }
+        const colorMap = { 'W': 'w', 'U': 'u', 'B': 'b', 'R': 'r', 'G': 'g' };
+        return colorIdentity.map(c => `<i class="ms ms-${colorMap[c]} mana"></i>`).join('');
+    }
+
+    listEl.innerHTML = sortedCommanders.map(cmd => {
+        const winRate = cmd.count > 0 ? ((cmd.wins / cmd.count) * 100).toFixed(0) : 0;
+        const winRateColor = winRate >= 50 ? '#00b894' : '#ff6b6b';
+        return `
+            <div style="background: var(--bg-primary); padding: 15px; border-radius: 10px; border: 1px solid var(--border-color);">
+                <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 8px;">${cmd.name}</div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div class="mana-cost">${getColorSymbols(cmd.colorIdentity)}</div>
+                    <div style="text-align: right;">
+                        <span style="color: var(--text-muted); font-size: 0.85em;">${cmd.count} games</span>
+                        <span style="color: ${winRateColor}; font-weight: bold; margin-left: 10px;">Your WR: ${winRate}%</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
 }
 
 // Calculate most faced commanders

@@ -161,7 +161,7 @@
         }
 
         .header-title h1 {
-            background: linear-gradient(135deg, #ffd700 0%, #fff 50%, #ffd700 100%);
+            background: linear-gradient(135deg, #2d5a27 0%, #4caf50 50%, #2d5a27 100%);
             background-size: 200% auto;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -170,7 +170,6 @@
             font-weight: 700;
             letter-spacing: 1px;
             margin: 0;
-            text-transform: uppercase;
             animation: shimmer 3s linear infinite;
         }
 
@@ -186,6 +185,167 @@
             letter-spacing: 3px;
             text-transform: uppercase;
             margin-top: 8px;
+        }
+
+        .header-left-actions {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .install-help-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .install-help-btn:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            filter: brightness(1.1);
+        }
+
+        .install-help-btn svg {
+            flex-shrink: 0;
+        }
+
+        /* Install Help Modal */
+        .install-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .install-modal-content {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .install-modal-header {
+            padding: 20px 25px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .install-modal-header h3 {
+            margin: 0;
+            color: var(--accent);
+            font-size: 1.3em;
+        }
+
+        .install-modal-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5em;
+            cursor: pointer;
+            padding: 5px;
+            line-height: 1;
+        }
+
+        .install-modal-close:hover {
+            color: var(--text-primary);
+        }
+
+        .install-modal-body {
+            padding: 25px;
+        }
+
+        .install-platform {
+            margin-bottom: 25px;
+        }
+
+        .install-platform:last-child {
+            margin-bottom: 0;
+        }
+
+        .install-platform h4 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0 0 15px 0;
+            color: var(--text-primary);
+            font-size: 1.1em;
+        }
+
+        .install-platform h4 svg {
+            flex-shrink: 0;
+        }
+
+        .install-steps {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .install-steps li {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+
+        .install-steps li:last-child {
+            border-bottom: none;
+        }
+
+        .step-number {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 24px;
+            height: 24px;
+            background: var(--accent);
+            color: white;
+            border-radius: 50%;
+            font-size: 0.8em;
+            font-weight: 700;
+        }
+
+        .install-note {
+            margin-top: 20px;
+            padding: 15px;
+            background: var(--bg-primary);
+            border-radius: 10px;
+            border-left: 3px solid var(--accent);
+        }
+
+        .install-note p {
+            margin: 0;
+            color: var(--text-muted);
+            font-size: 0.85em;
+            line-height: 1.5;
         }
 
         /* Theme Selector */
@@ -699,6 +859,96 @@
             display: flex;
             gap: 12px;
             margin-bottom: 24px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .export-divider {
+            color: var(--text-muted);
+            opacity: 0.5;
+        }
+
+        /* Import Modal */
+        .import-modal-content {
+            max-width: 450px;
+        }
+
+        .import-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        .import-option {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 15px;
+            background: var(--bg-primary);
+            border-radius: 10px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .import-option:hover {
+            border-color: var(--accent);
+        }
+
+        .import-option.selected {
+            border-color: var(--accent);
+            background: rgba(var(--accent-rgb), 0.1);
+        }
+
+        .import-option input[type="radio"] {
+            margin-top: 3px;
+        }
+
+        .import-option-text h4 {
+            margin: 0 0 5px 0;
+            color: var(--text-primary);
+            font-size: 1em;
+        }
+
+        .import-option-text p {
+            margin: 0;
+            color: var(--text-muted);
+            font-size: 0.85em;
+        }
+
+        .import-preview {
+            margin: 15px 0;
+            padding: 15px;
+            background: var(--bg-primary);
+            border-radius: 10px;
+            border-left: 3px solid var(--accent);
+        }
+
+        .import-preview h4 {
+            margin: 0 0 10px 0;
+            color: var(--accent);
+            font-size: 0.9em;
+        }
+
+        .import-preview p {
+            margin: 5px 0;
+            color: var(--text-secondary);
+            font-size: 0.9em;
+        }
+
+        .import-warning {
+            margin-top: 15px;
+            padding: 12px;
+            background: rgba(255, 100, 100, 0.1);
+            border-radius: 8px;
+            border-left: 3px solid var(--danger);
+        }
+
+        .import-warning p {
+            margin: 0;
+            color: var(--danger);
+            font-size: 0.85em;
         }
 
         /* Stat Cards */
@@ -1067,9 +1317,6 @@
 
         /* Cloud Sync UI */
         .cloud-sync-container {
-            position: absolute;
-            top: 20px;
-            left: 0;
             display: flex;
             align-items: center;
             gap: 10px;
@@ -1165,14 +1412,19 @@
                 display: none;
             }
 
-            /* Move cloud sync and theme to flow with content */
-            .cloud-sync-container {
+            /* Move header actions and theme to flow with content */
+            .header-left-actions {
                 position: relative;
                 top: auto;
                 left: auto;
                 order: 2;
                 justify-content: center;
                 flex-wrap: wrap;
+            }
+
+            .install-help-btn {
+                padding: 6px 12px;
+                font-size: 12px;
             }
 
             .theme-selector {
@@ -2224,25 +2476,35 @@
 <body>
     <div class="container">
         <header class="app-header">
-            <!-- Cloud Sync (PWA only) -->
-            <div class="cloud-sync-container" id="cloud-sync-container" style="display: none;">
-                <!-- Signed out state -->
-                <div id="sign-in-container">
-                    <button class="cloud-sync-btn" id="sign-in-btn" title="Sign in to sync across devices">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
-                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
-                        </svg>
-                        Sign in to Sync
-                    </button>
-                </div>
-                <!-- Signed in state -->
-                <div id="user-container" style="display: none;">
-                    <div class="user-info">
-                        <img id="user-avatar" class="user-avatar" src="" alt="User">
-                        <span id="user-email" class="user-email"></span>
-                        <span class="sync-status" id="sync-status">Synced</span>
+            <!-- Header Left Actions -->
+            <div class="header-left-actions">
+                <!-- Install App Button (always visible) -->
+                <button class="install-help-btn" id="install-help-btn" title="How to install this app">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+                    </svg>
+                    Install App
+                </button>
+                <!-- Cloud Sync (PWA only) -->
+                <div class="cloud-sync-container" id="cloud-sync-container" style="display: none;">
+                    <!-- Signed out state -->
+                    <div id="sign-in-container">
+                        <button class="cloud-sync-btn" id="sign-in-btn" title="Sign in to sync across devices">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+                            </svg>
+                            Sign In
+                        </button>
                     </div>
-                    <button class="sign-out-btn" id="sign-out-btn">Sign Out</button>
+                    <!-- Signed in state -->
+                    <div id="user-container" style="display: none;">
+                        <div class="user-info">
+                            <img id="user-avatar" class="user-avatar" src="" alt="User">
+                            <span id="user-email" class="user-email"></span>
+                            <span class="sync-status" id="sync-status">Synced</span>
+                        </div>
+                        <button class="sign-out-btn" id="sign-out-btn">Sign Out</button>
+                    </div>
                 </div>
             </div>
 
@@ -2254,16 +2516,16 @@
                     <i class="ms ms-r ms-cost"></i>
                     <i class="ms ms-g ms-cost"></i>
                 </div>
-                <h1>Commander Tracker</h1>
-                <p class="header-subtitle">Your EDH journey</p>
+                <h1>Seasons_Past</h1>
+                <p class="header-subtitle">Your EDH Journey Through the Seasons</p>
             </div>
             <div class="theme-selector">
                 <label for="theme-select">Theme</label>
                 <select id="theme-select">
-                    <option value="default">Default (Blue)</option>
+                    <option value="true-dark">True Dark</option>
+                    <option value="default">Blue</option>
                     <option value="light">Light Mode</option>
                     <option value="comfy">Comfy (Warm)</option>
-                    <option value="true-dark">True Dark</option>
                     <option value="monokai">Monokai</option>
                 </select>
             </div>
@@ -2373,6 +2635,9 @@
             <div class="export-buttons">
                 <button id="export-csv" class="secondary">📊 Export to CSV</button>
                 <button id="export-json" class="secondary">💾 Export to JSON</button>
+                <span class="export-divider">|</span>
+                <button id="import-data-btn" class="secondary">📥 Import Data</button>
+                <input type="file" id="import-file-input" accept=".csv,.json" style="display: none;">
             </div>
 
             <!-- Filters Section -->
@@ -2608,6 +2873,117 @@
             <div class="modal-actions" style="margin-top: 24px;">
                 <button id="life-counter-reset-btn" class="danger">Reset All</button>
                 <button id="life-counter-settings-close" class="secondary">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Data Modal -->
+    <div id="import-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content import-modal-content">
+            <h3 style="color: var(--accent); margin-bottom: 8px;">Import Game Data</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">Restore your game history from a backup file.</p>
+
+            <div id="import-preview" class="import-preview" style="display: none;">
+                <h4>File Preview</h4>
+                <p id="import-file-name">-</p>
+                <p id="import-game-count">-</p>
+            </div>
+
+            <div class="import-options">
+                <label class="import-option selected" data-mode="merge">
+                    <input type="radio" name="import-mode" value="merge" checked>
+                    <div class="import-option-text">
+                        <h4>Merge with existing data</h4>
+                        <p>Add imported games to your current history. Duplicates will be skipped.</p>
+                    </div>
+                </label>
+                <label class="import-option" data-mode="replace">
+                    <input type="radio" name="import-mode" value="replace">
+                    <div class="import-option-text">
+                        <h4>Replace all data</h4>
+                        <p>Remove all current games and replace with imported data.</p>
+                    </div>
+                </label>
+            </div>
+
+            <div id="import-replace-warning" class="import-warning" style="display: none;">
+                <p>⚠️ Warning: This will permanently delete all your current game history!</p>
+            </div>
+
+            <div class="modal-actions" style="margin-top: 20px;">
+                <button id="import-confirm-btn" class="primary" disabled>Import</button>
+                <button id="import-cancel-btn" class="secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Install Help Modal -->
+    <div id="install-help-modal" class="install-modal-overlay">
+        <div class="install-modal-content">
+            <div class="install-modal-header">
+                <h3>Install on Your Phone</h3>
+                <button class="install-modal-close" id="install-modal-close">&times;</button>
+            </div>
+            <div class="install-modal-body">
+                <!-- Android Instructions -->
+                <div class="install-platform">
+                    <h4>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="#3DDC84">
+                            <path d="M6 18c0 .55.45 1 1 1h1v3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V19h2v3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V19h1c.55 0 1-.45 1-1V8H6v10zM3.5 8C2.67 8 2 8.67 2 9.5v7c0 .83.67 1.5 1.5 1.5S5 17.33 5 16.5v-7C5 8.67 4.33 8 3.5 8zm17 0c-.83 0-1.5.67-1.5 1.5v7c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5v-7c0-.83-.67-1.5-1.5-1.5zm-4.97-5.84l1.3-1.3c.2-.2.2-.51 0-.71-.2-.2-.51-.2-.71 0l-1.48 1.48C13.85 1.23 12.95 1 12 1c-.96 0-1.86.23-2.66.63L7.85.15c-.2-.2-.51-.2-.71 0-.2.2-.2.51 0 .71l1.31 1.31C6.97 3.26 6 5.01 6 7h12c0-1.99-.97-3.75-2.47-4.84zM10 5H9V4h1v1zm5 0h-1V4h1v1z"/>
+                        </svg>
+                        Android (Chrome)
+                    </h4>
+                    <ol class="install-steps">
+                        <li>
+                            <span class="step-number">1</span>
+                            <span>Open this website in <strong>Chrome</strong> browser</span>
+                        </li>
+                        <li>
+                            <span class="step-number">2</span>
+                            <span>Tap the <strong>three dots menu</strong> (&#8942;) in the top right corner</span>
+                        </li>
+                        <li>
+                            <span class="step-number">3</span>
+                            <span>Tap <strong>"Add to Home screen"</strong> or <strong>"Install app"</strong></span>
+                        </li>
+                        <li>
+                            <span class="step-number">4</span>
+                            <span>Tap <strong>"Add"</strong> to confirm - the app icon will appear on your home screen!</span>
+                        </li>
+                    </ol>
+                </div>
+
+                <!-- iOS Instructions -->
+                <div class="install-platform">
+                    <h4>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="#999">
+                            <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+                        </svg>
+                        iPhone / iPad (Safari)
+                    </h4>
+                    <ol class="install-steps">
+                        <li>
+                            <span class="step-number">1</span>
+                            <span>Open this website in <strong>Safari</strong> browser (not Chrome)</span>
+                        </li>
+                        <li>
+                            <span class="step-number">2</span>
+                            <span>Tap the <strong>Share button</strong> (square with arrow pointing up) at the bottom of the screen</span>
+                        </li>
+                        <li>
+                            <span class="step-number">3</span>
+                            <span>Scroll down and tap <strong>"Add to Home Screen"</strong></span>
+                        </li>
+                        <li>
+                            <span class="step-number">4</span>
+                            <span>Tap <strong>"Add"</strong> in the top right - the app icon will appear on your home screen!</span>
+                        </li>
+                    </ol>
+                </div>
+
+                <div class="install-note">
+                    <p><strong>Note:</strong> Once installed, the app works offline and opens like a native app without the browser address bar. Your data syncs across devices when signed in.</p>
+                </div>
             </div>
         </div>
     </div>

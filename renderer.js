@@ -7,7 +7,7 @@ let showArchivedDecks = false;
 
 // Theme management
 function initTheme() {
-    const savedTheme = localStorage.getItem('theme') || 'default';
+    const savedTheme = localStorage.getItem('theme') || 'true-dark';
     document.documentElement.setAttribute('data-theme', savedTheme);
     const themeSelect = document.getElementById('theme-select');
     if (themeSelect) {
@@ -827,6 +827,33 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+// Install Help Modal
+document.addEventListener('DOMContentLoaded', () => {
+    const installBtn = document.getElementById('install-help-btn');
+    const installModal = document.getElementById('install-help-modal');
+    const installClose = document.getElementById('install-modal-close');
+
+    if (installBtn && installModal) {
+        installBtn.addEventListener('click', () => {
+            installModal.style.display = 'flex';
+        });
+    }
+
+    if (installClose && installModal) {
+        installClose.addEventListener('click', () => {
+            installModal.style.display = 'none';
+        });
+    }
+
+    if (installModal) {
+        installModal.addEventListener('click', (e) => {
+            if (e.target === installModal) {
+                installModal.style.display = 'none';
+            }
+        });
+    }
+});
+
 // Import Moxfield deck
 window.importMoxfieldDeck = async function(deckId) {
     const urlInput = document.getElementById(`moxfield-url-${deckId}`);
@@ -1625,6 +1652,221 @@ document.getElementById('export-json').addEventListener('click', async () => {
     }
     successMsg.classList.add('show');
     setTimeout(() => successMsg.classList.remove('show'), 3000);
+});
+
+// Import functionality
+let importedData = null;
+let importMode = 'merge';
+
+document.getElementById('import-data-btn').addEventListener('click', () => {
+    document.getElementById('import-file-input').click();
+});
+
+document.getElementById('import-file-input').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    try {
+        const content = await file.text();
+        const isJson = file.name.endsWith('.json');
+
+        if (isJson) {
+            importedData = JSON.parse(content);
+            // Validate JSON structure
+            if (!importedData.games || !Array.isArray(importedData.games)) {
+                throw new Error('Invalid JSON format: missing games array');
+            }
+        } else {
+            // Parse CSV
+            importedData = parseCSVtoGames(content);
+        }
+
+        // Show modal with preview
+        const modal = document.getElementById('import-modal');
+        document.getElementById('import-file-name').textContent = `File: ${file.name}`;
+        document.getElementById('import-game-count').textContent = `Games found: ${importedData.games.length}`;
+        document.getElementById('import-preview').style.display = 'block';
+        document.getElementById('import-confirm-btn').disabled = false;
+
+        modal.style.display = 'flex';
+    } catch (error) {
+        console.error('Import error:', error);
+        const successMsg = document.getElementById('history-success');
+        successMsg.style.background = '#e74c3c';
+        successMsg.textContent = '✗ Error reading file: ' + error.message;
+        successMsg.classList.add('show');
+        setTimeout(() => successMsg.classList.remove('show'), 4000);
+    }
+
+    // Reset file input
+    e.target.value = '';
+});
+
+function parseCSVtoGames(csvContent) {
+    const lines = csvContent.trim().split('\n');
+    const headers = lines[0].split(',');
+
+    const games = [];
+    for (let i = 1; i < lines.length; i++) {
+        const values = parseCSVLine(lines[i]);
+        if (values.length < 7) continue;
+
+        const [date, deckName, commander, result, winnerColorIdentity, opponents, totalPlayers] = values;
+
+        // Reconstruct game object
+        const game = {
+            id: Date.now() + i, // Generate unique ID
+            date: date,
+            myDeck: {
+                name: deckName.replace(/^"|"$/g, ''),
+                commander: {
+                    name: commander.replace(/^"|"$/g, ''),
+                    colorIdentity: winnerColorIdentity || ''
+                }
+            },
+            won: result.toLowerCase() === 'win',
+            winnerColorIdentity: winnerColorIdentity || '',
+            opponents: opponents.replace(/^"|"$/g, '').split('; ').filter(o => o).map(name => ({ name })),
+            totalPlayers: parseInt(totalPlayers) || 4
+        };
+
+        games.push(game);
+    }
+
+    return { games, decks: [] };
+}
+
+function parseCSVLine(line) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+
+    for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+
+        if (char === '"') {
+            inQuotes = !inQuotes;
+        } else if (char === ',' && !inQuotes) {
+            result.push(current);
+            current = '';
+        } else {
+            current += char;
+        }
+    }
+    result.push(current);
+
+    return result;
+}
+
+// Import option selection
+document.querySelectorAll('.import-option').forEach(option => {
+    option.addEventListener('click', () => {
+        document.querySelectorAll('.import-option').forEach(o => o.classList.remove('selected'));
+        option.classList.add('selected');
+        option.querySelector('input[type="radio"]').checked = true;
+        importMode = option.dataset.mode;
+
+        // Show/hide warning for replace mode
+        document.getElementById('import-replace-warning').style.display =
+            importMode === 'replace' ? 'block' : 'none';
+    });
+});
+
+// Import confirm
+document.getElementById('import-confirm-btn').addEventListener('click', async () => {
+    if (!importedData) return;
+
+    try {
+        const existingGames = await storage.getGames();
+
+        if (importMode === 'replace') {
+            // Delete all existing games first
+            for (const game of existingGames) {
+                await storage.deleteGame(game.id);
+            }
+        }
+
+        // Import games
+        let importedCount = 0;
+        let skippedCount = 0;
+
+        for (const game of importedData.games) {
+            // Check for duplicates when merging
+            if (importMode === 'merge') {
+                const isDuplicate = existingGames.some(existing =>
+                    existing.date === game.date &&
+                    existing.myDeck?.name === game.myDeck?.name &&
+                    existing.won === game.won
+                );
+
+                if (isDuplicate) {
+                    skippedCount++;
+                    continue;
+                }
+            }
+
+            // Save game with new ID to avoid conflicts
+            const newGame = { ...game, id: Date.now() + importedCount };
+            await storage.saveGame(newGame);
+            importedCount++;
+        }
+
+        // Import decks if available (JSON only)
+        if (importedData.decks && importedData.decks.length > 0) {
+            const existingDecks = await storage.getDecks();
+
+            for (const deck of importedData.decks) {
+                const isDuplicate = existingDecks.some(existing =>
+                    existing.name === deck.name
+                );
+
+                if (!isDuplicate) {
+                    await storage.saveDeck({ ...deck, id: Date.now() + Math.random() });
+                }
+            }
+        }
+
+        // Close modal and show success
+        document.getElementById('import-modal').style.display = 'none';
+        importedData = null;
+
+        const successMsg = document.getElementById('history-success');
+        successMsg.style.background = '#27ae60';
+        let message = `✓ Imported ${importedCount} game(s)`;
+        if (skippedCount > 0) {
+            message += ` (${skippedCount} duplicate(s) skipped)`;
+        }
+        successMsg.textContent = message;
+        successMsg.classList.add('show');
+        setTimeout(() => successMsg.classList.remove('show'), 4000);
+
+        // Reload game history
+        loadGameHistory();
+
+    } catch (error) {
+        console.error('Import error:', error);
+        const successMsg = document.getElementById('history-success');
+        successMsg.style.background = '#e74c3c';
+        successMsg.textContent = '✗ Import failed: ' + error.message;
+        successMsg.classList.add('show');
+        setTimeout(() => successMsg.classList.remove('show'), 4000);
+    }
+});
+
+// Import cancel
+document.getElementById('import-cancel-btn').addEventListener('click', () => {
+    document.getElementById('import-modal').style.display = 'none';
+    importedData = null;
+    document.getElementById('import-preview').style.display = 'none';
+    document.getElementById('import-confirm-btn').disabled = true;
+});
+
+// Close import modal on overlay click
+document.getElementById('import-modal').addEventListener('click', (e) => {
+    if (e.target.id === 'import-modal') {
+        document.getElementById('import-modal').style.display = 'none';
+        importedData = null;
+    }
 });
 
 // Load game history when switching to game history tab

@@ -1,6 +1,6 @@
 // Service Worker for MTG Commander Tracker PWA
-const CACHE_NAME = 'mtg-commander-tracker-v5';
-const STATIC_CACHE_NAME = 'mtg-commander-static-v5';
+const CACHE_NAME = 'mtg-commander-tracker-v6';
+const STATIC_CACHE_NAME = 'mtg-commander-static-v6';
 
 // Static assets to cache immediately (relative paths for GitHub Pages compatibility)
 const STATIC_ASSETS = [
@@ -68,11 +68,20 @@ self.addEventListener('fetch', (event) => {
     // Check if this is an API request
     const isApiRequest = API_PATTERNS.some(pattern => pattern.test(url.href));
 
+    // Check if this is an HTML request (use network-first to ensure updates)
+    const isHtmlRequest = event.request.headers.get('Accept')?.includes('text/html') ||
+                          url.pathname.endsWith('.html') ||
+                          url.pathname === '/' ||
+                          url.pathname.endsWith('/');
+
     if (isApiRequest) {
         // Network-first strategy for API calls
         event.respondWith(networkFirstStrategy(event.request));
+    } else if (isHtmlRequest) {
+        // Network-first strategy for HTML to ensure updates are received
+        event.respondWith(networkFirstStrategy(event.request));
     } else {
-        // Cache-first strategy for static assets
+        // Cache-first strategy for other static assets (JS, CSS, images)
         event.respondWith(cacheFirstStrategy(event.request));
     }
 });

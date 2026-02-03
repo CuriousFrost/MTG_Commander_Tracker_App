@@ -1,6 +1,6 @@
 // Service Worker for MTG Commander Tracker PWA
-const CACHE_NAME = 'mtg-commander-tracker-v8';
-const STATIC_CACHE_NAME = 'mtg-commander-static-v8';
+const CACHE_NAME = 'mtg-commander-tracker-v9';
+const STATIC_CACHE_NAME = 'mtg-commander-static-v9';
 
 // Static assets to cache immediately (relative paths for GitHub Pages compatibility)
 const STATIC_ASSETS = [

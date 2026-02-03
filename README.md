@@ -1,4 +1,4 @@
-# MTG Commander Tracker
+1# MTG Commander Tracker
 
 Track your Magic: The Gathering Commander (EDH) games, deck performance, and statistics. Available as a **desktop app** or **web app (PWA)**.
 

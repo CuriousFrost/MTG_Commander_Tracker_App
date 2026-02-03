@@ -96,11 +96,12 @@ class StorageAdapter {
         return this._implementation.openExternal(url);
     }
 
-    // Firebase Auth (PWA only)
+    // Firebase Auth - only available in PWA, not in Electron desktop app
     isFirebaseAvailable() {
         if (this._implementation?.isFirebaseAvailable) {
             return this._implementation.isFirebaseAvailable();
         }
+        // Electron desktop app is offline-only
         return false;
     }
 
@@ -122,7 +123,7 @@ class StorageAdapter {
         if (this._implementation?.onAuthStateChange) {
             return this._implementation.onAuthStateChange(callback);
         }
-        // Return no-op unsubscribe
+        // Electron: no auth state changes, return no-op unsubscribe
         return () => {};
     }
 
@@ -130,7 +131,7 @@ class StorageAdapter {
         if (this._implementation?.signInWithGoogle) {
             return this._implementation.signInWithGoogle();
         }
-        throw new Error('Sign in not available');
+        throw new Error('Sign in not available in desktop app');
     }
 
     async signOut() {

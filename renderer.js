@@ -3091,6 +3091,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (settingsBtn) {
         settingsBtn.addEventListener('click', () => {
+            // Show/hide exit fullscreen button based on current mode
+            const exitFullscreenBtn = document.getElementById('life-counter-exit-fullscreen-btn');
+            if (exitFullscreenBtn) {
+                exitFullscreenBtn.style.display = document.body.classList.contains('life-counter-fullscreen') ? 'inline-block' : 'none';
+            }
             settingsModal.style.display = 'flex';
         });
     }
@@ -3170,13 +3175,15 @@ function exitLifCounterFullscreen() {
     document.getElementById('my-decks').classList.add('active');
 }
 
-document.getElementById('life-counter-exit-btn')?.addEventListener('click', async () => {
+document.getElementById('life-counter-exit-fullscreen-btn')?.addEventListener('click', async () => {
     const confirmed = await showConfirmModal(
         'Exit Life Counter',
         'Are you sure you want to leave? Your current game will be preserved until you reset.',
         'Exit'
     );
     if (confirmed) {
+        // Close the settings modal first
+        document.getElementById('life-counter-settings-modal').style.display = 'none';
         exitLifCounterFullscreen();
     }
 });

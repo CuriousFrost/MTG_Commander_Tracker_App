@@ -129,7 +129,7 @@
         .container {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 30px;
+            padding: 0 30px 30px 30px;
         }
 
         /* App Header */
@@ -138,21 +138,9 @@
             align-items: center;
             justify-content: center;
             gap: 24px;
-            margin-bottom: 40px;
-            padding: 20px 0;
+            margin-bottom: 5px;
+            padding: 0;
             position: relative;
-        }
-
-        .app-header::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 400px;
-            height: 100px;
-            background: radial-gradient(ellipse, rgba(255, 215, 0, 0.1) 0%, transparent 70%);
-            pointer-events: none;
         }
 
         .header-title {
@@ -160,36 +148,15 @@
             position: relative;
         }
 
-        .header-title h1 {
-            background: linear-gradient(135deg, #2d5a27 0%, #4caf50 50%, #2d5a27 100%);
-            background-size: 200% auto;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            font-size: 2.8em;
-            font-weight: 700;
-            letter-spacing: 1px;
-            margin: 0;
-            animation: shimmer 3s linear infinite;
-        }
-
-        @keyframes shimmer {
-            0% { background-position: 0% center; }
-            100% { background-position: 200% center; }
-        }
-
-        .header-subtitle {
-            color: var(--text-muted);
-            font-size: 0.95em;
-            font-weight: 400;
-            letter-spacing: 3px;
-            text-transform: uppercase;
-            margin-top: 8px;
+        .header-logo {
+            max-width: 400px;
+            height: auto;
+            margin-top: 5px;
         }
 
         .header-left-actions {
             position: absolute;
-            top: 20px;
+            top: 5px;
             left: 0;
             display: flex;
             align-items: center;
@@ -388,25 +355,6 @@
             font-weight: 500;
         }
 
-
-        .header-mana-row {
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-            margin-bottom: 12px;
-        }
-
-        .header-mana-row .ms-cost {
-            font-size: 2em;
-            filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.4));
-            transition: transform 0.3s ease, filter 0.3s ease;
-        }
-
-        .header-mana-row .ms-cost:hover {
-            transform: scale(1.2) translateY(-4px);
-            filter: drop-shadow(0 6px 16px rgba(255, 215, 0, 0.5));
-        }
-
         h1 {
             text-align: center;
             background: linear-gradient(135deg, #ffd700 0%, #ffb347 100%);
@@ -437,7 +385,7 @@
             display: flex;
             justify-content: center;
             gap: 8px;
-            margin-bottom: 30px;
+            margin-bottom: 10px;
             border-bottom: none;
             background: var(--bg-card);
             padding: 8px;
@@ -1448,11 +1396,6 @@
             color: var(--accent);
         }
 
-        /* Hide cloud sync in Electron */
-        .electron-mode .cloud-sync-container {
-            display: none;
-        }
-
         /* Mobile Responsive Styles */
         @media (max-width: 768px) {
             .container {
@@ -1497,17 +1440,8 @@
                 order: 1;
             }
 
-            .header-title h1 {
-                font-size: 1.8em;
-            }
-
-            .header-mana-row .ms-cost {
-                font-size: 1.5em;
-            }
-
-            .header-subtitle {
-                font-size: 0.8em;
-                letter-spacing: 2px;
+            .header-logo {
+                max-width: 300px;
             }
 
             /* User info on mobile */
@@ -1588,12 +1522,8 @@
         }
 
         @media (max-width: 480px) {
-            .header-title h1 {
-                font-size: 1.4em;
-            }
-
-            .header-mana-row .ms-cost {
-                font-size: 1.2em;
+            .header-logo {
+                max-width: 250px;
             }
 
             .tab {
@@ -1642,35 +1572,6 @@
 
         body.life-counter-fullscreen .tab-content:not(#life-counter) {
             display: none !important;
-        }
-
-        .life-counter-exit-btn {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: rgba(0,0,0,0.5);
-            border: 2px solid rgba(255,255,255,0.3);
-            color: white;
-            font-size: 1.2em;
-            font-weight: bold;
-            cursor: pointer;
-            z-index: 200;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease;
-        }
-
-        .life-counter-exit-btn:hover {
-            background: rgba(255,0,0,0.6);
-            transform: scale(1.1);
-        }
-
-        body.life-counter-fullscreen .life-counter-exit-btn {
-            display: flex;
         }
 
         .life-counter-container {
@@ -2146,6 +2047,16 @@
             max-width: 350px;
         }
 
+        .life-counter-modal-content .modal-actions {
+            flex-wrap: wrap;
+        }
+
+        .life-counter-modal-content .modal-actions button {
+            min-width: 90px;
+            padding: 10px 16px;
+            font-size: 13px;
+        }
+
         .player-count-selector {
             display: flex;
             gap: 10px;
@@ -2303,14 +2214,6 @@
                 padding: 5px !important;
             }
 
-            .life-counter-exit-btn {
-                width: 35px;
-                height: 35px;
-                font-size: 1em;
-                top: 8px;
-                left: 8px;
-            }
-
             .life-counter-container {
                 gap: 25px;
                 padding: 5px;
@@ -2451,14 +2354,6 @@
                 height: 100vh;
             }
 
-            .life-counter-exit-btn {
-                width: 28px;
-                height: 28px;
-                font-size: 0.9em;
-                top: 5px;
-                left: 5px;
-            }
-
             .life-counter-container {
                 gap: 15px;
                 padding: 3px;
@@ -2567,15 +2462,7 @@
             </div>
 
             <div class="header-title">
-                <div class="header-mana-row">
-                    <i class="ms ms-w ms-cost"></i>
-                    <i class="ms ms-u ms-cost"></i>
-                    <i class="ms ms-b ms-cost"></i>
-                    <i class="ms ms-r ms-cost"></i>
-                    <i class="ms ms-g ms-cost"></i>
-                </div>
-                <h1>Seasons_Past</h1>
-                <p class="header-subtitle">Your EDH Journey Through the Seasons</p>
+                <img src="icons/Seasons Past (1).svg" alt="Seasons Past" class="header-logo">
             </div>
             <div class="theme-selector">
                 <label for="theme-select">Theme</label>
@@ -2914,7 +2801,6 @@
 
         <!-- Life Counter Tab -->
         <div class="tab-content" id="life-counter">
-            <button class="life-counter-exit-btn" id="life-counter-exit-btn" title="Exit Life Counter">&times;</button>
             <div class="life-counter-container" data-players="4">
                 <!-- Player cards will be rendered here by JavaScript -->
             </div>
@@ -2954,6 +2840,7 @@
                 </div>
             </div>
             <div class="modal-actions" style="margin-top: 24px;">
+                <button id="life-counter-exit-fullscreen-btn" class="primary" style="display: none;">Exit Counter</button>
                 <button id="life-counter-reset-btn" class="danger">Reset All</button>
                 <button id="life-counter-settings-close" class="secondary">Close</button>
             </div>

@@ -89,6 +89,24 @@ export class PWAStorage {
         return user;
     }
 
+    async signInWithEmailPassword(email, password) {
+        const user = await firebaseSync.signInWithEmailPassword(email, password);
+        // Sync data after sign in
+        await this._performSync();
+        return user;
+    }
+
+    async createAccountWithEmail(email, password) {
+        const user = await firebaseSync.createAccountWithEmail(email, password);
+        // Sync data after sign in
+        await this._performSync();
+        return user;
+    }
+
+    async sendPasswordReset(email) {
+        return firebaseSync.sendPasswordReset(email);
+    }
+
     async signOut() {
         await firebaseSync.signOut();
     }

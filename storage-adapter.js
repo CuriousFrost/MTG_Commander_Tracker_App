@@ -134,6 +134,27 @@ class StorageAdapter {
         throw new Error('Sign in not available in desktop app');
     }
 
+    async signInWithEmailPassword(email, password) {
+        if (this._implementation?.signInWithEmailPassword) {
+            return this._implementation.signInWithEmailPassword(email, password);
+        }
+        throw new Error('Sign in not available in desktop app');
+    }
+
+    async createAccountWithEmail(email, password) {
+        if (this._implementation?.createAccountWithEmail) {
+            return this._implementation.createAccountWithEmail(email, password);
+        }
+        throw new Error('Sign in not available in desktop app');
+    }
+
+    async sendPasswordReset(email) {
+        if (this._implementation?.sendPasswordReset) {
+            return this._implementation.sendPasswordReset(email);
+        }
+        throw new Error('Password reset not available in desktop app');
+    }
+
     async signOut() {
         if (this._implementation?.signOut) {
             return this._implementation.signOut();

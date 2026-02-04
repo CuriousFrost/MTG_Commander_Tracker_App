@@ -104,6 +104,50 @@ class FirebaseSync {
         }
     }
 
+    // Sign in with email/password
+    async signInWithEmailPassword(email, password) {
+        if (!this.isAvailable()) {
+            throw new Error('Firebase is not available');
+        }
+
+        try {
+            const result = await this.auth.signInWithEmailAndPassword(email, password);
+            return result.user;
+        } catch (error) {
+            console.error('Email sign in error:', error);
+            throw error;
+        }
+    }
+
+    // Create new account with email/password
+    async createAccountWithEmail(email, password) {
+        if (!this.isAvailable()) {
+            throw new Error('Firebase is not available');
+        }
+
+        try {
+            const result = await this.auth.createUserWithEmailAndPassword(email, password);
+            return result.user;
+        } catch (error) {
+            console.error('Create account error:', error);
+            throw error;
+        }
+    }
+
+    // Send password reset email
+    async sendPasswordReset(email) {
+        if (!this.isAvailable()) {
+            throw new Error('Firebase is not available');
+        }
+
+        try {
+            await this.auth.sendPasswordResetEmail(email);
+        } catch (error) {
+            console.error('Password reset error:', error);
+            throw error;
+        }
+    }
+
     // Sign out
     async signOut() {
         if (!this.isAvailable()) return;

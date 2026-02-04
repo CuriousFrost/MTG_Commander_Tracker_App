@@ -7,7 +7,7 @@ let showArchivedDecks = false;
 let podBuddies = [];
 
 // Login Screen Management (PWA only)
-function initLoginScreen() {
+async function initLoginScreen() {
     // Skip for Electron desktop app
     if (window.process) {
         return;
@@ -28,13 +28,16 @@ function initLoginScreen() {
 
     let isRegisterMode = false;
 
+    // Wait for storage to be ready before checking Firebase
+    await storage.ready();
+
     // Check if Firebase is available
     if (!storage.isFirebaseAvailable()) {
         loginScreen.style.display = 'none';
         return;
     }
 
-    // Show login screen initially
+    // Show login screen initially (will be hidden by auth listener if already signed in)
     loginScreen.style.display = 'flex';
 
     // Helper: Firebase error messages

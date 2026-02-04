@@ -10,6 +10,3 @@ nul
 # User data files
 myDecks.json
 games.json
-
-# Firebase config (contains API keys - create your own from firebase-config.example.js)
-firebase-config.js

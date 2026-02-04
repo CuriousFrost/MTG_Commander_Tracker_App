@@ -1932,8 +1932,6 @@ function closeBuddySelectModal() {
 }
 
 // Pod Buddies Event Listeners
-document.getElementById('manage-buddies-btn').addEventListener('click', openPodBuddiesModal);
-
 document.getElementById('pod-buddies-close-btn').addEventListener('click', closePodBuddiesModal);
 
 document.getElementById('pod-buddies-modal').addEventListener('click', (e) => {

@@ -281,6 +281,263 @@ class FirebaseSync {
 
         return Array.from(merged.values());
     }
+
+    // Generate unique 8-character Friend ID (excludes confusing chars: 0,O,1,I,L)
+    _generateFriendId() {
+        const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+        let id = '';
+        for (let i = 0; i < 8; i++) {
+            id += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return id;
+    }
+
+    // Initialize user profile on first sign-in
+    async initUserProfile() {
+        if (!this.isSignedIn()) return null;
+
+        try {
+            const userDocRef = this.db.collection('users').doc(this.user.uid);
+            const docSnap = await userDocRef.get();
+            const data = docSnap.exists ? docSnap.data() : {};
+
+            // Check if user already has a friendId
+            if (data.friendId) {
+                return {
+                    friendId: data.friendId,
+                    username: data.username || this.user.email.split('@')[0],
+                    friends: data.friends || []
+                };
+            }
+
+            // Generate unique Friend ID
+            let friendId = this._generateFriendId();
+            let attempts = 0;
+            const maxAttempts = 10;
+
+            // Ensure friendId is unique
+            while (attempts < maxAttempts) {
+                const existingDoc = await this.db.collection('friendIds').doc(friendId).get();
+                if (!existingDoc.exists) {
+                    break;
+                }
+                friendId = this._generateFriendId();
+                attempts++;
+            }
+
+            if (attempts >= maxAttempts) {
+                throw new Error('Could not generate unique Friend ID');
+            }
+
+            // Set default username from email prefix
+            const username = this.user.email.split('@')[0];
+
+            // Create friendId lookup document
+            await this.db.collection('friendIds').doc(friendId).set({
+                uid: this.user.uid
+            });
+
+            // Update user profile
+            await userDocRef.set({
+                friendId: friendId,
+                username: username,
+                friends: [],
+                email: this.user.email,
+                lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+
+            console.log('User profile initialized with Friend ID:', friendId);
+            return { friendId, username, friends: [] };
+        } catch (error) {
+            console.error('Error initializing user profile:', error);
+            throw error;
+        }
+    }
+
+    // Get current user's profile data
+    async getUserProfile() {
+        if (!this.isSignedIn()) return null;
+
+        try {
+            const userDocRef = this.db.collection('users').doc(this.user.uid);
+            const docSnap = await userDocRef.get();
+
+            if (docSnap.exists) {
+                const data = docSnap.data();
+                return {
+                    friendId: data.friendId || null,
+                    username: data.username || this.user.email.split('@')[0],
+                    friends: data.friends || [],
+                    email: this.user.email
+                };
+            }
+            return null;
+        } catch (error) {
+            console.error('Error getting user profile:', error);
+            return null;
+        }
+    }
+
+    // Update display name
+    async updateUsername(newUsername) {
+        if (!this.isSignedIn()) return false;
+
+        const trimmed = newUsername.trim();
+        if (!trimmed || trimmed.length < 1 || trimmed.length > 30) {
+            throw new Error('Username must be 1-30 characters');
+        }
+
+        try {
+            const userDocRef = this.db.collection('users').doc(this.user.uid);
+            await userDocRef.set({
+                username: trimmed,
+                lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+
+            console.log('Username updated to:', trimmed);
+            return true;
+        } catch (error) {
+            console.error('Error updating username:', error);
+            throw error;
+        }
+    }
+
+    // Add friend by Friend ID
+    async addFriendByFriendId(friendId) {
+        if (!this.isSignedIn()) {
+            throw new Error('Must be signed in to add friends');
+        }
+
+        const normalizedId = friendId.toUpperCase().trim();
+        if (normalizedId.length !== 8) {
+            throw new Error('Friend ID must be 8 characters');
+        }
+
+        try {
+            // Get current user's profile
+            const userProfile = await this.getUserProfile();
+            if (!userProfile) {
+                throw new Error('User profile not found');
+            }
+
+            // Can't add yourself
+            if (normalizedId === userProfile.friendId) {
+                throw new Error('You cannot add yourself as a friend');
+            }
+
+            // Check if already friends
+            if (userProfile.friends && userProfile.friends.includes(normalizedId)) {
+                throw new Error('Already friends with this user');
+            }
+
+            // Look up friend ID
+            const friendIdDoc = await this.db.collection('friendIds').doc(normalizedId).get();
+            if (!friendIdDoc.exists) {
+                throw new Error('Friend ID not found');
+            }
+
+            // Add to friends list
+            const userDocRef = this.db.collection('users').doc(this.user.uid);
+            await userDocRef.update({
+                friends: firebase.firestore.FieldValue.arrayUnion(normalizedId),
+                lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            console.log('Friend added:', normalizedId);
+            return true;
+        } catch (error) {
+            console.error('Error adding friend:', error);
+            throw error;
+        }
+    }
+
+    // Remove friend by Friend ID
+    async removeFriend(friendId) {
+        if (!this.isSignedIn()) {
+            throw new Error('Must be signed in to remove friends');
+        }
+
+        try {
+            const userDocRef = this.db.collection('users').doc(this.user.uid);
+            await userDocRef.update({
+                friends: firebase.firestore.FieldValue.arrayRemove(friendId),
+                lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            console.log('Friend removed:', friendId);
+            return true;
+        } catch (error) {
+            console.error('Error removing friend:', error);
+            throw error;
+        }
+    }
+
+    // Get list of online friends with their usernames
+    async getOnlineFriends() {
+        if (!this.isSignedIn()) return [];
+
+        try {
+            const userProfile = await this.getUserProfile();
+            if (!userProfile || !userProfile.friends || userProfile.friends.length === 0) {
+                return [];
+            }
+
+            const friends = [];
+            for (const friendId of userProfile.friends) {
+                // Look up UID from friendId
+                const friendIdDoc = await this.db.collection('friendIds').doc(friendId).get();
+                if (!friendIdDoc.exists) continue;
+
+                const friendUid = friendIdDoc.data().uid;
+                const friendUserDoc = await this.db.collection('users').doc(friendUid).get();
+                if (!friendUserDoc.exists) continue;
+
+                const friendData = friendUserDoc.data();
+                friends.push({
+                    friendId: friendId,
+                    username: friendData.username || 'Unknown',
+                    uid: friendUid
+                });
+            }
+
+            return friends;
+        } catch (error) {
+            console.error('Error getting online friends:', error);
+            return [];
+        }
+    }
+
+    // Fetch friend's public data (decks, games, stats)
+    async getFriendPublicData(friendId) {
+        if (!this.isSignedIn()) {
+            throw new Error('Must be signed in to view friend data');
+        }
+
+        try {
+            // Look up UID from friendId
+            const friendIdDoc = await this.db.collection('friendIds').doc(friendId).get();
+            if (!friendIdDoc.exists) {
+                throw new Error('Friend not found');
+            }
+
+            const friendUid = friendIdDoc.data().uid;
+            const friendUserDoc = await this.db.collection('users').doc(friendUid).get();
+            if (!friendUserDoc.exists) {
+                throw new Error('Friend data not found');
+            }
+
+            const data = friendUserDoc.data();
+            return {
+                username: data.username || 'Unknown',
+                friendId: friendId,
+                decks: data.decks || [],
+                games: data.games || []
+            };
+        } catch (error) {
+            console.error('Error getting friend public data:', error);
+            throw error;
+        }
+    }
 }
 
 // Export singleton instance

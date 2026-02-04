@@ -160,6 +160,57 @@ class StorageAdapter {
             return this._implementation.signOut();
         }
     }
+
+    // User Profile Methods - PWA only feature
+    async initUserProfile() {
+        if (this._implementation?.initUserProfile) {
+            return this._implementation.initUserProfile();
+        }
+        return null;
+    }
+
+    async getUserProfile() {
+        if (this._implementation?.getUserProfile) {
+            return this._implementation.getUserProfile();
+        }
+        return null;
+    }
+
+    async updateUsername(newUsername) {
+        if (this._implementation?.updateUsername) {
+            return this._implementation.updateUsername(newUsername);
+        }
+        throw new Error('Username update not available in desktop app');
+    }
+
+    // Friend Management Methods - PWA only feature
+    async addFriendByFriendId(friendId) {
+        if (this._implementation?.addFriendByFriendId) {
+            return this._implementation.addFriendByFriendId(friendId);
+        }
+        throw new Error('Friend features not available in desktop app');
+    }
+
+    async removeFriend(friendId) {
+        if (this._implementation?.removeFriend) {
+            return this._implementation.removeFriend(friendId);
+        }
+        throw new Error('Friend features not available in desktop app');
+    }
+
+    async getOnlineFriends() {
+        if (this._implementation?.getOnlineFriends) {
+            return this._implementation.getOnlineFriends();
+        }
+        return [];
+    }
+
+    async getFriendPublicData(friendId) {
+        if (this._implementation?.getFriendPublicData) {
+            return this._implementation.getFriendPublicData(friendId);
+        }
+        throw new Error('Friend features not available in desktop app');
+    }
 }
 
 // Export singleton instance

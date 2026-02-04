@@ -235,6 +235,413 @@ function renderBuddySelectList() {
     });
 }
 
+// Pod Buddies Tab - Online Friends Management
+let userProfile = null;
+let onlineFriends = [];
+
+async function initUserProfile() {
+    if (!storage.isSignedIn()) {
+        userProfile = null;
+        return;
+    }
+
+    try {
+        // Initialize profile (creates Friend ID if needed)
+        userProfile = await storage.initUserProfile();
+        console.log('User profile loaded:', userProfile);
+    } catch (error) {
+        console.error('Error initializing user profile:', error);
+    }
+}
+
+async function initPodBuddiesTab() {
+    // Load user profile
+    if (!userProfile && storage.isSignedIn()) {
+        await initUserProfile();
+    }
+
+    // Update profile display
+    updateProfileDisplay();
+
+    // Load and display online friends
+    await loadOnlineFriends();
+
+    // Load and display offline buddies
+    loadPodBuddies();
+    renderOfflineBuddiesList();
+}
+
+function updateProfileDisplay() {
+    const friendIdEl = document.getElementById('your-friend-id');
+    const usernameInput = document.getElementById('profile-username');
+
+    if (!storage.isSignedIn() || !userProfile) {
+        friendIdEl.textContent = 'Sign in to get your Friend ID';
+        friendIdEl.style.fontSize = '14px';
+        usernameInput.value = '';
+        usernameInput.disabled = true;
+        document.getElementById('save-username-btn').disabled = true;
+        document.getElementById('copy-friend-id-btn').disabled = true;
+        document.getElementById('add-online-friend-btn').disabled = true;
+        return;
+    }
+
+    friendIdEl.textContent = userProfile.friendId || 'Loading...';
+    friendIdEl.style.fontSize = '';
+    usernameInput.value = userProfile.username || '';
+    usernameInput.disabled = false;
+    document.getElementById('save-username-btn').disabled = false;
+    document.getElementById('copy-friend-id-btn').disabled = false;
+    document.getElementById('add-online-friend-btn').disabled = false;
+}
+
+async function loadOnlineFriends() {
+    if (!storage.isSignedIn()) {
+        onlineFriends = [];
+        renderOnlineFriendsList();
+        return;
+    }
+
+    try {
+        onlineFriends = await storage.getOnlineFriends();
+        renderOnlineFriendsList();
+    } catch (error) {
+        console.error('Error loading online friends:', error);
+        onlineFriends = [];
+        renderOnlineFriendsList();
+    }
+}
+
+function renderOnlineFriendsList() {
+    const container = document.getElementById('online-friends-list');
+    if (!container) return;
+
+    if (!storage.isSignedIn()) {
+        container.innerHTML = '<p class="empty-list-message">Sign in to connect with friends online</p>';
+        return;
+    }
+
+    if (onlineFriends.length === 0) {
+        container.innerHTML = '<p class="empty-list-message">No online friends yet. Share your Friend ID with friends to connect!</p>';
+        return;
+    }
+
+    container.innerHTML = onlineFriends.map(friend => `
+        <div class="friend-item" data-friend-id="${friend.friendId}">
+            <div class="friend-info">
+                <span class="friend-username">${escapeHtml(friend.username)}</span>
+                <span class="friend-id-small">${friend.friendId}</span>
+            </div>
+            <div class="friend-actions">
+                <button type="button" class="view-stats-btn" data-friend-id="${friend.friendId}">View Stats</button>
+                <button type="button" class="remove-friend-btn" data-friend-id="${friend.friendId}">Remove</button>
+            </div>
+        </div>
+    `).join('');
+
+    // Add event handlers
+    container.querySelectorAll('.view-stats-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const friendId = e.target.dataset.friendId;
+            showFriendStats(friendId);
+        });
+    });
+
+    container.querySelectorAll('.remove-friend-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            const friendId = e.target.dataset.friendId;
+            const friend = onlineFriends.find(f => f.friendId === friendId);
+            const confirmed = await showConfirmModal(
+                'Remove Friend',
+                `Are you sure you want to remove ${friend?.username || friendId} from your friends?`,
+                'Remove'
+            );
+            if (confirmed) {
+                await removeOnlineFriend(friendId);
+            }
+        });
+    });
+}
+
+function renderOfflineBuddiesList() {
+    const container = document.getElementById('offline-buddies-list');
+    if (!container) return;
+
+    if (podBuddies.length === 0) {
+        container.innerHTML = '<p class="empty-list-message">No buddies added yet</p>';
+        return;
+    }
+
+    container.innerHTML = podBuddies.map(buddy => `
+        <div class="buddy-item">
+            <span class="buddy-name">${escapeHtml(buddy)}</span>
+            <button type="button" class="delete-buddy-btn" data-buddy="${escapeHtml(buddy)}">Remove</button>
+        </div>
+    `).join('');
+
+    // Add delete handlers
+    container.querySelectorAll('.delete-buddy-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const buddyName = e.target.dataset.buddy;
+            removePodBuddy(buddyName);
+            renderOfflineBuddiesList();
+            populateBuddyFilter();
+        });
+    });
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+async function removeOnlineFriend(friendId) {
+    try {
+        await storage.removeFriend(friendId);
+        await loadOnlineFriends();
+    } catch (error) {
+        console.error('Error removing friend:', error);
+        alert('Failed to remove friend. Please try again.');
+    }
+}
+
+async function showFriendStats(friendId) {
+    const modal = document.getElementById('friend-stats-modal');
+    const usernameEl = document.getElementById('friend-stats-username');
+    const idEl = document.getElementById('friend-stats-id');
+
+    // Show loading state
+    usernameEl.textContent = 'Loading...';
+    idEl.textContent = friendId;
+    document.getElementById('friend-total-games').textContent = '-';
+    document.getElementById('friend-wins').textContent = '-';
+    document.getElementById('friend-win-rate').textContent = '-';
+    document.getElementById('friend-active-decks').textContent = '-';
+    document.getElementById('friend-decks-list').innerHTML = '<p class="empty-list-message">Loading...</p>';
+    document.getElementById('friend-games-list').innerHTML = '<p class="empty-list-message">Loading...</p>';
+
+    modal.style.display = 'flex';
+
+    try {
+        const friendData = await storage.getFriendPublicData(friendId);
+
+        usernameEl.textContent = friendData.username;
+
+        // Calculate stats
+        const games = friendData.games || [];
+        const decks = friendData.decks || [];
+        const totalGames = games.length;
+        const wins = games.filter(g => g.won).length;
+        const winRate = totalGames > 0 ? ((wins / totalGames) * 100).toFixed(1) : 0;
+        const activeDecks = decks.filter(d => !d.archived).length;
+
+        document.getElementById('friend-total-games').textContent = totalGames;
+        document.getElementById('friend-wins').textContent = wins;
+        document.getElementById('friend-win-rate').textContent = winRate + '%';
+        document.getElementById('friend-active-decks').textContent = activeDecks;
+
+        // Render decks list
+        const decksContainer = document.getElementById('friend-decks-list');
+        if (decks.length === 0) {
+            decksContainer.innerHTML = '<p class="empty-list-message">No decks</p>';
+        } else {
+            decksContainer.innerHTML = decks.slice(0, 10).map(deck => `
+                <div class="friend-deck-item">
+                    <div>
+                        <div class="friend-deck-name">${escapeHtml(deck.name)}</div>
+                        <div class="friend-deck-commander">${escapeHtml(deck.commander?.name || 'Unknown')}</div>
+                    </div>
+                    ${deck.archived ? '<span style="color: var(--text-muted); font-size: 11px;">Archived</span>' : ''}
+                </div>
+            `).join('');
+        }
+
+        // Render recent games list (last 10)
+        const gamesContainer = document.getElementById('friend-games-list');
+        if (games.length === 0) {
+            gamesContainer.innerHTML = '<p class="empty-list-message">No games logged</p>';
+        } else {
+            const recentGames = games.slice(-10).reverse();
+            gamesContainer.innerHTML = recentGames.map(game => `
+                <div class="friend-game-item">
+                    <div>
+                        <div class="friend-deck-name">${escapeHtml(game.myDeck?.name || 'Unknown Deck')}</div>
+                        <div class="friend-game-date">${game.date || 'No date'}</div>
+                    </div>
+                    <span class="friend-game-result ${game.won ? 'win' : 'loss'}">${game.won ? 'Win' : 'Loss'}</span>
+                </div>
+            `).join('');
+        }
+    } catch (error) {
+        console.error('Error loading friend stats:', error);
+        usernameEl.textContent = 'Error loading data';
+        document.getElementById('friend-decks-list').innerHTML = '<p class="empty-list-message">Failed to load</p>';
+        document.getElementById('friend-games-list').innerHTML = '<p class="empty-list-message">Failed to load</p>';
+    }
+}
+
+// Copy Friend ID to clipboard
+document.getElementById('copy-friend-id-btn')?.addEventListener('click', async () => {
+    const friendId = document.getElementById('your-friend-id').textContent;
+    if (!friendId || friendId === 'Loading...' || friendId.includes('Sign in')) return;
+
+    try {
+        await navigator.clipboard.writeText(friendId);
+        const btn = document.getElementById('copy-friend-id-btn');
+        btn.classList.add('copied');
+        btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>';
+        setTimeout(() => {
+            btn.classList.remove('copied');
+            btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>';
+        }, 2000);
+    } catch (error) {
+        console.error('Failed to copy:', error);
+    }
+});
+
+// Save username
+document.getElementById('save-username-btn')?.addEventListener('click', async () => {
+    const input = document.getElementById('profile-username');
+    const btn = document.getElementById('save-username-btn');
+    const newUsername = input.value.trim();
+
+    if (!newUsername) {
+        alert('Please enter a username');
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+
+    try {
+        await storage.updateUsername(newUsername);
+        userProfile.username = newUsername;
+        btn.textContent = 'Saved!';
+        setTimeout(() => {
+            btn.textContent = 'Save';
+            btn.disabled = false;
+        }, 1500);
+    } catch (error) {
+        console.error('Error saving username:', error);
+        alert(error.message || 'Failed to save username');
+        btn.textContent = 'Save';
+        btn.disabled = false;
+    }
+});
+
+// Add Online Friend Modal
+document.getElementById('add-online-friend-btn')?.addEventListener('click', () => {
+    const modal = document.getElementById('add-friend-modal');
+    const input = document.getElementById('add-friend-id-input');
+    const error = document.getElementById('add-friend-error');
+    input.value = '';
+    error.style.display = 'none';
+    modal.style.display = 'flex';
+    input.focus();
+});
+
+document.getElementById('add-friend-cancel-btn')?.addEventListener('click', () => {
+    document.getElementById('add-friend-modal').style.display = 'none';
+});
+
+document.getElementById('add-friend-confirm-btn')?.addEventListener('click', async () => {
+    const input = document.getElementById('add-friend-id-input');
+    const error = document.getElementById('add-friend-error');
+    const btn = document.getElementById('add-friend-confirm-btn');
+    const friendId = input.value.trim().toUpperCase();
+
+    error.style.display = 'none';
+
+    if (friendId.length !== 8) {
+        error.textContent = 'Friend ID must be 8 characters';
+        error.style.display = 'block';
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Adding...';
+
+    try {
+        await storage.addFriendByFriendId(friendId);
+        document.getElementById('add-friend-modal').style.display = 'none';
+        await loadOnlineFriends();
+    } catch (err) {
+        error.textContent = err.message || 'Failed to add friend';
+        error.style.display = 'block';
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Add Friend';
+    }
+});
+
+// Close add friend modal on overlay click
+document.getElementById('add-friend-modal')?.addEventListener('click', (e) => {
+    if (e.target.id === 'add-friend-modal') {
+        document.getElementById('add-friend-modal').style.display = 'none';
+    }
+});
+
+// Close friend stats modal
+document.getElementById('friend-stats-close')?.addEventListener('click', () => {
+    document.getElementById('friend-stats-modal').style.display = 'none';
+});
+
+document.getElementById('friend-stats-modal')?.addEventListener('click', (e) => {
+    if (e.target.id === 'friend-stats-modal') {
+        document.getElementById('friend-stats-modal').style.display = 'none';
+    }
+});
+
+// Add Offline Buddy Modal
+document.getElementById('add-offline-buddy-btn')?.addEventListener('click', () => {
+    const modal = document.getElementById('add-offline-buddy-modal');
+    const input = document.getElementById('offline-buddy-name-input');
+    const error = document.getElementById('add-offline-buddy-error');
+    input.value = '';
+    error.style.display = 'none';
+    modal.style.display = 'flex';
+    input.focus();
+});
+
+document.getElementById('add-offline-buddy-cancel-btn')?.addEventListener('click', () => {
+    document.getElementById('add-offline-buddy-modal').style.display = 'none';
+});
+
+document.getElementById('add-offline-buddy-confirm-btn')?.addEventListener('click', () => {
+    const input = document.getElementById('offline-buddy-name-input');
+    const error = document.getElementById('add-offline-buddy-error');
+    const name = input.value.trim();
+
+    error.style.display = 'none';
+
+    if (!name) {
+        error.textContent = 'Please enter a name';
+        error.style.display = 'block';
+        return;
+    }
+
+    if (addPodBuddy(name)) {
+        document.getElementById('add-offline-buddy-modal').style.display = 'none';
+        renderOfflineBuddiesList();
+        populateBuddyFilter();
+    } else {
+        error.textContent = 'Buddy already exists';
+        error.style.display = 'block';
+    }
+});
+
+document.getElementById('add-offline-buddy-modal')?.addEventListener('click', (e) => {
+    if (e.target.id === 'add-offline-buddy-modal') {
+        document.getElementById('add-offline-buddy-modal').style.display = 'none';
+    }
+});
+
+// Initialize Pod Buddies tab when switching to it
+document.querySelector('[data-tab="pod-buddies"]')?.addEventListener('click', () => {
+    initPodBuddiesTab();
+});
+
 // Theme management
 function initTheme() {
     const savedTheme = localStorage.getItem('theme') || 'true-dark';
@@ -313,7 +720,7 @@ function initCloudSync() {
     }
 
     // Update UI based on auth state
-    function updateAuthUI(user) {
+    async function updateAuthUI(user) {
         if (user) {
             signInContainer.style.display = 'none';
             userContainer.style.display = 'flex';
@@ -321,6 +728,9 @@ function initCloudSync() {
             userEmail.textContent = user.email;
             syncStatus.textContent = 'Synced';
             syncStatus.classList.remove('syncing');
+
+            // Initialize user profile (creates Friend ID if needed)
+            await initUserProfile();
 
             // Reload data after sign in
             reloadData();
@@ -330,6 +740,9 @@ function initCloudSync() {
             // Reset to sign-in options view
             signInOptions.style.display = 'flex';
             emailFormContainer.style.display = 'none';
+            // Clear user profile
+            userProfile = null;
+            onlineFriends = [];
         }
     }
 

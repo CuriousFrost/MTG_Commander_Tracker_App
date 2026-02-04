@@ -454,4 +454,34 @@ export class PWAStorage {
     openExternal(url) {
         window.open(url, '_blank', 'noopener,noreferrer');
     }
+
+    // User Profile Methods (Firebase)
+    async initUserProfile() {
+        return firebaseSync.initUserProfile();
+    }
+
+    async getUserProfile() {
+        return firebaseSync.getUserProfile();
+    }
+
+    async updateUsername(newUsername) {
+        return firebaseSync.updateUsername(newUsername);
+    }
+
+    // Friend Management Methods (Firebase)
+    async addFriendByFriendId(friendId) {
+        return firebaseSync.addFriendByFriendId(friendId);
+    }
+
+    async removeFriend(friendId) {
+        return firebaseSync.removeFriend(friendId);
+    }
+
+    async getOnlineFriends() {
+        return firebaseSync.getOnlineFriends();
+    }
+
+    async getFriendPublicData(friendId) {
+        return firebaseSync.getFriendPublicData(friendId);
+    }
 }

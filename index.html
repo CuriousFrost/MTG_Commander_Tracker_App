@@ -1621,6 +1621,335 @@
             }
         }
 
+        /* Pod Buddies Tab Styles */
+        #pod-buddies {
+            padding: 30px;
+        }
+
+        .buddies-section {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border-color);
+        }
+
+        .buddies-section h3 {
+            color: var(--accent);
+            font-size: 1.2em;
+            margin: 0;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .section-subtitle {
+            color: var(--text-muted);
+            font-size: 13px;
+            margin: 4px 0 0 0;
+        }
+
+        .profile-card {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .profile-row {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .friend-id-display {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--bg-input);
+            padding: 14px 18px;
+            border-radius: 10px;
+            border: 2px solid var(--border-accent);
+        }
+
+        .friend-id-display span {
+            font-family: 'Courier New', monospace;
+            font-size: 1.5em;
+            font-weight: 700;
+            letter-spacing: 3px;
+            color: var(--accent);
+        }
+
+        .copy-btn {
+            padding: 8px !important;
+            min-width: auto !important;
+            background: var(--bg-card) !important;
+            border: 1px solid var(--border-color) !important;
+            border-radius: 8px !important;
+            color: var(--text-secondary) !important;
+            box-shadow: none !important;
+        }
+
+        .copy-btn:hover {
+            background: var(--bg-card-hover) !important;
+            color: var(--accent) !important;
+        }
+
+        .copy-btn.copied {
+            background: var(--success) !important;
+            color: white !important;
+            border-color: var(--success) !important;
+        }
+
+        .username-edit {
+            display: flex;
+            gap: 10px;
+        }
+
+        .username-edit input {
+            flex: 1;
+        }
+
+        .username-edit button {
+            white-space: nowrap;
+        }
+
+        .buddies-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .empty-list-message {
+            color: var(--text-muted);
+            text-align: center;
+            padding: 30px 20px;
+            font-style: italic;
+        }
+
+        .buddy-item, .friend-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 18px;
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            transition: all 0.2s ease;
+        }
+
+        .buddy-item:hover, .friend-item:hover {
+            border-color: var(--border-accent);
+            background: var(--bg-card-hover);
+        }
+
+        .friend-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .friend-username {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .friend-id-small {
+            font-family: monospace;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .friend-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .view-stats-btn {
+            padding: 8px 14px !important;
+            font-size: 13px !important;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        }
+
+        .remove-friend-btn, .delete-buddy-btn {
+            padding: 8px 14px !important;
+            font-size: 13px !important;
+            background: transparent !important;
+            border: 1px solid var(--danger) !important;
+            color: var(--danger) !important;
+            box-shadow: none !important;
+        }
+
+        .remove-friend-btn:hover, .delete-buddy-btn:hover {
+            background: var(--danger) !important;
+            color: white !important;
+        }
+
+        /* Modal Large (for friend stats) */
+        .modal-large {
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .friend-stats-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 24px;
+        }
+
+        .modal-close-btn {
+            background: none !important;
+            border: none !important;
+            color: var(--text-muted) !important;
+            font-size: 28px !important;
+            cursor: pointer;
+            padding: 0 !important;
+            line-height: 1;
+            box-shadow: none !important;
+        }
+
+        .modal-close-btn:hover {
+            color: var(--text-primary) !important;
+            transform: none !important;
+        }
+
+        .friend-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .friend-stats-grid .stat-card {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+        }
+
+        .friend-stats-grid .stat-value {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 4px;
+        }
+
+        .friend-stats-grid .stat-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .friend-stats-section {
+            margin-bottom: 20px;
+        }
+
+        .friend-stats-section h4 {
+            color: var(--accent);
+            margin-bottom: 12px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .friend-decks-list, .friend-games-list {
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .friend-deck-item, .friend-game-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .friend-deck-item:last-child, .friend-game-item:last-child {
+            border-bottom: none;
+        }
+
+        .friend-deck-name {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .friend-deck-commander {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .friend-game-date {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .friend-game-result {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .friend-game-result.win {
+            background: rgba(0, 184, 148, 0.2);
+            color: var(--success);
+        }
+
+        .friend-game-result.loss {
+            background: rgba(255, 107, 107, 0.2);
+            color: var(--danger);
+        }
+
+        @media (max-width: 768px) {
+            #pod-buddies {
+                padding: 20px;
+            }
+
+            .buddies-section {
+                padding: 18px;
+            }
+
+            .friend-stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .friend-actions {
+                flex-direction: column;
+            }
+
+            .section-header {
+                flex-direction: column;
+            }
+
+            .section-header button {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .friend-id-display span {
+                font-size: 1.2em;
+                letter-spacing: 2px;
+            }
+
+            .friend-stats-grid .stat-value {
+                font-size: 1.4em;
+            }
+        }
+
         /* Life Counter Styles */
         #life-counter {
             padding: 10px !important;
@@ -2893,6 +3222,7 @@
             <button class="tab" data-tab="game-history">Game History</button>
             <button class="tab" data-tab="statistics">Statistics</button>
             <button class="tab" data-tab="life-counter">Life Counter</button>
+            <button class="tab" data-tab="pod-buddies">Pod Buddies</button>
         </div>
 
         <!-- My Decks Tab -->
@@ -3224,6 +3554,63 @@
         </div>
         <!-- END Life Counter Tab -->
 
+        <!-- Pod Buddies Tab -->
+        <div class="tab-content" id="pod-buddies">
+            <!-- Your Profile Section -->
+            <div class="buddies-section">
+                <h3 style="margin-bottom: 15px;">Your Profile</h3>
+                <div class="profile-card">
+                    <div class="profile-row">
+                        <label style="margin-bottom: 0;">Friend ID</label>
+                        <div class="friend-id-display">
+                            <span id="your-friend-id">Loading...</span>
+                            <button type="button" id="copy-friend-id-btn" class="copy-btn" title="Copy to clipboard">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="profile-row" style="margin-top: 15px;">
+                        <label for="profile-username" style="margin-bottom: 0;">Username</label>
+                        <div class="username-edit">
+                            <input type="text" id="profile-username" placeholder="Enter username..." maxlength="30">
+                            <button type="button" id="save-username-btn" class="primary">Save</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Online Friends Section -->
+            <div class="buddies-section">
+                <div class="section-header">
+                    <div>
+                        <h3>Online Friends</h3>
+                        <p class="section-subtitle">Friends using Seasons Past - view their stats</p>
+                    </div>
+                    <button type="button" id="add-online-friend-btn" class="primary">+ Add Friend</button>
+                </div>
+                <div id="online-friends-list" class="buddies-list">
+                    <p class="empty-list-message">No online friends yet. Share your Friend ID with friends to connect!</p>
+                </div>
+            </div>
+
+            <!-- Offline Buddies Section -->
+            <div class="buddies-section">
+                <div class="section-header">
+                    <div>
+                        <h3>Offline Buddies</h3>
+                        <p class="section-subtitle">Playgroup members not using the app</p>
+                    </div>
+                    <button type="button" id="add-offline-buddy-btn" class="secondary">+ Add Buddy</button>
+                </div>
+                <div id="offline-buddies-list" class="buddies-list">
+                    <p class="empty-list-message">No buddies added yet</p>
+                </div>
+            </div>
+        </div>
+        <!-- END Pod Buddies Tab -->
+
     </div>
 
     <!-- Life Counter Settings Modal -->
@@ -3294,6 +3681,92 @@
 
             <div class="modal-actions" style="margin-top: 20px;">
                 <button id="add-buddy-cancel-btn" class="secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Online Friend Modal -->
+    <div id="add-friend-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content" style="max-width: 400px;">
+            <h3 style="color: var(--accent); margin-bottom: 8px;">Add Online Friend</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">Enter your friend's 8-character Friend ID to connect.</p>
+
+            <div class="form-group">
+                <label for="add-friend-id-input">Friend ID</label>
+                <input type="text" id="add-friend-id-input" placeholder="e.g., A3K9M2X7" maxlength="8" style="text-transform: uppercase; font-family: monospace; font-size: 18px; letter-spacing: 2px; text-align: center;">
+            </div>
+
+            <p id="add-friend-error" class="error-message" style="display: none; color: var(--danger); margin-bottom: 15px;"></p>
+
+            <div class="modal-actions">
+                <button id="add-friend-confirm-btn" class="primary">Add Friend</button>
+                <button id="add-friend-cancel-btn" class="secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Friend Stats Popup Modal -->
+    <div id="friend-stats-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content modal-large">
+            <div class="friend-stats-header">
+                <div>
+                    <h3 id="friend-stats-username" style="color: var(--accent); margin-bottom: 4px;">Friend Name</h3>
+                    <p id="friend-stats-id" style="color: var(--text-muted); font-family: monospace;">XXXXXXXX</p>
+                </div>
+                <button id="friend-stats-close" class="modal-close-btn">&times;</button>
+            </div>
+
+            <div class="friend-stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="friend-total-games">0</div>
+                    <div class="stat-label">Total Games</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="friend-wins">0</div>
+                    <div class="stat-label">Wins</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="friend-win-rate">0%</div>
+                    <div class="stat-label">Win Rate</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="friend-active-decks">0</div>
+                    <div class="stat-label">Active Decks</div>
+                </div>
+            </div>
+
+            <div class="friend-stats-section">
+                <h4>Their Decks</h4>
+                <div id="friend-decks-list" class="friend-decks-list">
+                    <p class="empty-list-message">No decks</p>
+                </div>
+            </div>
+
+            <div class="friend-stats-section">
+                <h4>Recent Games</h4>
+                <div id="friend-games-list" class="friend-games-list">
+                    <p class="empty-list-message">No games logged</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Offline Buddy Modal -->
+    <div id="add-offline-buddy-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content" style="max-width: 400px;">
+            <h3 style="color: var(--accent); margin-bottom: 8px;">Add Offline Buddy</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">Add a playgroup member who doesn't use the app.</p>
+
+            <div class="form-group">
+                <label for="offline-buddy-name-input">Buddy Name</label>
+                <input type="text" id="offline-buddy-name-input" placeholder="Enter name..." maxlength="30">
+            </div>
+
+            <p id="add-offline-buddy-error" class="error-message" style="display: none; color: var(--danger); margin-bottom: 15px;"></p>
+
+            <div class="modal-actions">
+                <button id="add-offline-buddy-confirm-btn" class="primary">Add Buddy</button>
+                <button id="add-offline-buddy-cancel-btn" class="secondary">Cancel</button>
             </div>
         </div>
     </div>

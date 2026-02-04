@@ -109,6 +109,21 @@ export class PWAStorage {
 
     async signOut() {
         await firebaseSync.signOut();
+        // Clear local data on sign out (true cloud-only mode)
+        await this._clearStore('decks');
+        await this._clearStore('games');
+        console.log('Local data cleared on sign out');
+    }
+
+    // Clear all items in a store
+    async _clearStore(storeName) {
+        return new Promise((resolve, reject) => {
+            const tx = this.db.transaction(storeName, 'readwrite');
+            const store = tx.objectStore(storeName);
+            const request = store.clear();
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject(request.error);
+        });
     }
 
     // Perform full sync with cloud

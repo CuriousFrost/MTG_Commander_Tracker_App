@@ -1,6 +1,6 @@
-1# MTG Commander Tracker
+# Seasons Past
 
-Track your Magic: The Gathering Commander (EDH) games, deck performance, and statistics. Available as a **desktop app** or **web app (PWA)**.
+Track your Magic: The Gathering Commander (EDH) games, deck performance, and statistics. Available as an offline **desktop app** or cloud-based **web app (PWA)**.
 
 ![Electron](https://img.shields.io/badge/Electron-40.0.0-47848F?logo=electron&logoColor=white)
 ![PWA](https://img.shields.io/badge/PWA-Ready-5A0FC8?logo=pwa&logoColor=white)
@@ -9,8 +9,8 @@ Track your Magic: The Gathering Commander (EDH) games, deck performance, and sta
 
 ## Download / Use
 
-### Web App (PWA) - Recommended for Mobile
-**[Launch Web App](https://curiousfrost.github.io/MTG_Commander_Tracker_App/)**
+### Web App (PWA) - Recommended for Full Features and for Mobile
+**[Launch Web App](https://seasonspast.app)**
 
 - Works on any device with a browser (phone, tablet, computer)
 - Can be installed to your home screen for app-like experience
@@ -20,6 +20,7 @@ Track your Magic: The Gathering Commander (EDH) games, deck performance, and sta
 Download the latest portable `.exe` from the [Releases](https://github.com/CuriousFrost/MTG_Commander_Tracker_App/releases) page.
 
 No installation required - just run the executable!
+
 ## Features
 
 ### Deck Management
@@ -52,7 +53,7 @@ No installation required - just run the executable!
 - Comprehensive game log with filtering:
   - Filter by deck, result, date range, or opponent
 - Export to CSV or JSON for backup/analysis
-- Delete individual games
+- Edit or delete individual games
 
 ### Customization
 - 5 color themes:
@@ -109,60 +110,40 @@ No installation required - just run the executable!
 
 ## Data Storage
 
-By default, your data is stored locally on your device. **Optional cloud sync** is available for PWA users.
-
 ### Desktop App (Electron)
 Data is stored locally in JSON files in the app folder:
 - `commanders.json` - Cached commander data from Scryfall
 - `myDecks.json` - Your deck collection
 - `games.json` - Your game history
 
-### Web App (PWA) - Local Storage
-Data is stored in your browser's **IndexedDB** database:
-- Stored locally on your device, specific to that browser
-- **Does NOT sync** across devices or browsers (unless cloud sync is enabled)
-- Persists until you clear browser data or uninstall the PWA
-
-### Cloud Sync (Optional - PWA Only)
-
-The PWA supports **optional cloud sync** via Firebase, allowing you to:
-- Sign in with Google
-- Sync your decks and games across all your devices
-- Never lose your data if you clear browser storage
-
-**Cloud sync is disabled by default.** To enable it for your own deployment, see [Setting Up Cloud Sync](#setting-up-cloud-sync) below.
-
-### Important for PWA Users (Without Cloud Sync)
-
-| Scenario | What Happens |
-|----------|--------------|
-| Switching phones/computers | Start fresh - data doesn't transfer |
-| Clearing browser data | **Deletes all your data** |
-| Uninstalling the PWA | May delete your data (browser-dependent) |
-| Using a different browser | Separate data - browsers don't share |
+### Web App (PWA) - Cloud Storage
+The PWA uses **cloud storage** via Firebase:
+- Sign in with Google or Email to save your data
+- Your decks and games sync across all your devices
+- Data persists even if you clear browser storage or switch devices
 
 ### Backing Up Your Data
 
-**Always export your data regularly!** Use the **Export to JSON** button in Game History to save a backup file. This backup can be kept safely and used to restore your data if needed.
+Use the **Export to JSON** button in Game History to save a local backup file.
 
-## Setting Up Cloud Sync
+## Setting Up Firebase (For Your Own Deployment)
 
-To enable cloud sync for your own deployment:
+To set up Firebase for your own deployment:
 
 1. **Create a Firebase Project**
    - Go to [Firebase Console](https://console.firebase.google.com/)
    - Create a new project
 
 2. **Enable Authentication**
-   - Go to Authentication → Sign-in method
-   - Enable Google sign-in
+   - Go to Authentication -> Sign-in method
+   - Enable Google sign-in and/or Email/Password
 
 3. **Enable Firestore Database**
    - Go to Firestore Database
    - Create database (start in test mode for development)
 
 4. **Get Your Config**
-   - Go to Project Settings → Your Apps
+   - Go to Project Settings -> Your Apps
    - Add a web app if you haven't
    - Copy the config object
 

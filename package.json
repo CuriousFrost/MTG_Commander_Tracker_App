@@ -22,7 +22,7 @@
   },
   "build": {
     "appId": "com.mtgcommander.tracker",
-    "productName": "MTG Commander Tracker",
+    "productName": "Seasons Past",
     "directories": {
       "output": "dist"
     },

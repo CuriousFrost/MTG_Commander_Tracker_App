@@ -2975,6 +2975,64 @@ document.getElementById('export-json').addEventListener('click', async () => {
     setTimeout(() => successMsg.classList.remove('show'), 3000);
 });
 
+// Download template for importing games
+document.getElementById('download-template-btn').addEventListener('click', () => {
+    const template = {
+        "_instructions": "Fill in your games below. Delete this _instructions field before importing.",
+        "_colorIdentityCodes": "W=White, U=Blue, B=Black, R=Red, G=Green, C=Colorless. Combine for multicolor (e.g., UB, WUR, WUBRG)",
+        "games": [
+            {
+                "date": "2024-01-15",
+                "myDeck": {
+                    "name": "Your Deck Name",
+                    "commander": {
+                        "name": "Your Commander Name",
+                        "colorIdentity": ["U", "B"]
+                    }
+                },
+                "won": true,
+                "winningCommander": "Your Commander Name",
+                "winnerColorIdentity": "UB",
+                "opponents": [
+                    { "name": "Opponent 1 Commander" },
+                    { "name": "Opponent 2 Commander" }
+                ],
+                "totalPlayers": 3
+            },
+            {
+                "date": "2024-01-20",
+                "myDeck": {
+                    "name": "Your Deck Name",
+                    "commander": {
+                        "name": "Your Commander Name",
+                        "colorIdentity": ["W", "U", "B", "R", "G"]
+                    }
+                },
+                "won": false,
+                "winningCommander": "Winning Commander Name",
+                "winnerColorIdentity": "RG",
+                "opponents": [
+                    { "name": "Opponent 1 Commander" },
+                    { "name": "Opponent 2 Commander" },
+                    { "name": "Opponent 3 Commander" }
+                ],
+                "totalPlayers": 4
+            }
+        ],
+        "decks": []
+    };
+
+    const blob = new Blob([JSON.stringify(template, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'game-import-template.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+});
+
 // Import functionality
 let importedData = null;
 let importMode = 'merge';

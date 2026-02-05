@@ -196,12 +196,15 @@ function renderBuddiesList() {
         return;
     }
 
-    container.innerHTML = podBuddies.map(buddy => `
+    container.innerHTML = podBuddies.map(buddy => {
+        const safeBuddy = escapeHtml(buddy);
+        return `
         <div class="buddy-item">
-            <span class="buddy-name">${buddy}</span>
-            <button type="button" class="delete-buddy-btn" data-buddy="${buddy}">✕ Remove</button>
+            <span class="buddy-name">${safeBuddy}</span>
+            <button type="button" class="delete-buddy-btn" data-buddy="${safeBuddy}">✕ Remove</button>
         </div>
-    `).join('');
+    `;
+    }).join('');
 
     // Add delete handlers
     container.querySelectorAll('.delete-buddy-btn').forEach(btn => {
@@ -1383,12 +1386,14 @@ function renderOrganizeList() {
         const isFirst = index === 0;
         const isLast = index === tempDeckOrder.length - 1;
         const archivedBadge = deck.archived ? '<span style="color: var(--text-muted); font-size: 12px; margin-left: 8px;">(Retired)</span>' : '';
+        const safeDeckName = escapeHtml(deck.name);
+        const safeCommanderName = escapeHtml(deck.commander.name);
 
         return `
             <div class="organize-deck-item" data-index="${index}" style="display: flex; align-items: center; justify-content: space-between; padding: 12px; margin-bottom: 8px; background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border-color);">
                 <div style="flex: 1; overflow: hidden;">
-                    <div style="font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${deck.name}${archivedBadge}</div>
-                    <div style="font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${deck.commander.name}</div>
+                    <div style="font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${safeDeckName}${archivedBadge}</div>
+                    <div style="font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${safeCommanderName}</div>
                 </div>
                 <div style="display: flex; gap: 4px; margin-left: 10px;">
                     <button onclick="moveDeckUp(${index})" ${isFirst ? 'disabled' : ''} style="padding: 6px 10px; font-size: 16px; ${isFirst ? 'opacity: 0.3; cursor: not-allowed;' : ''}">&#9650;</button>
@@ -1617,7 +1622,7 @@ window.importMoxfieldDeckFromModal = async function(deckId) {
         }, 1000);
 
     } catch (error) {
-        statusDiv.innerHTML = `<p style="color: var(--danger);">Error: ${error.message}</p>`;
+        statusDiv.innerHTML = `<p style="color: var(--danger);">Error: ${escapeHtml(error.message)}</p>`;
     }
 };
 
@@ -1760,7 +1765,7 @@ window.importMoxfieldDeck = async function(deckId) {
         }, 1000);
         
     } catch (error) {
-        statusDiv.innerHTML = `<p style="color: #ff6b6b;">Error: ${error.message}</p>`;
+        statusDiv.innerHTML = `<p style="color: #ff6b6b;">Error: ${escapeHtml(error.message)}</p>`;
     }
 };
 

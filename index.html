@@ -854,23 +854,28 @@
         }
 
         button.danger {
-            background: linear-gradient(135deg, var(--danger) 0%, #ee5a6f 100%);
-            color: white;
-            box-shadow: 0 4px 15px var(--shadow-color);
+            background: var(--bg-card);
+            color: var(--danger);
+            border: 1px solid rgba(255, 107, 107, 0.3);
+            box-shadow: none;
         }
 
         button.danger:hover {
-            box-shadow: 0 6px 25px var(--shadow-color);
+            border-color: var(--danger);
+            box-shadow: none;
         }
 
         button.secondary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            box-shadow: 0 4px 15px var(--shadow-color);
+            background: var(--bg-card);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+            box-shadow: none;
         }
 
         button.secondary:hover {
-            box-shadow: 0 6px 25px var(--shadow-color);
+            border-color: var(--accent);
+            color: var(--accent);
+            box-shadow: none;
         }
 
         /* Autocomplete */
@@ -1047,12 +1052,34 @@
             min-width: calc(50% - 5px);
         }
 
+        .deck-card__actions button {
+            background: var(--bg-card) !important;
+            border: 1px solid var(--border-color) !important;
+            color: var(--text-secondary) !important;
+            box-shadow: none !important;
+        }
+
+        .deck-card__actions button:hover {
+            border-color: var(--accent) !important;
+            color: var(--accent) !important;
+            background: var(--bg-card) !important;
+            transform: none !important;
+        }
+
+        .deck-card__actions button.danger {
+            color: var(--danger) !important;
+            border-color: rgba(255, 107, 107, 0.3) !important;
+        }
+
+        .deck-card__actions button.danger:hover {
+            border-color: var(--danger) !important;
+            color: var(--danger) !important;
+        }
+
         .btn-decklist {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
         }
 
         .btn-edhrec {
-            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%) !important;
         }
 
         .deck-card__decklist {
@@ -1143,18 +1170,218 @@
             border-bottom: none;
         }
 
-        /* Export Buttons */
-        .export-buttons {
+        /* Game History Header */
+        .game-history-header {
             display: flex;
-            gap: 12px;
-            margin-bottom: 24px;
             align-items: center;
-            flex-wrap: wrap;
+            justify-content: space-between;
+            margin-bottom: 16px;
         }
 
-        .export-divider {
+        .game-history-header h2 {
+            margin: 0;
+        }
+
+        .docs-btn {
+            padding: 8px 20px !important;
+            font-size: 13px !important;
+            background: var(--bg-card) !important;
+            color: var(--text-secondary) !important;
+            border: 1px solid var(--border-color) !important;
+            border-radius: 8px !important;
+            min-width: auto !important;
+        }
+
+        .docs-btn:hover {
+            color: var(--accent) !important;
+            border-color: var(--accent) !important;
+        }
+
+        /* Docs Popup */
+        .docs-popup {
+            position: relative;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        .docs-popup-item {
+            padding: 12px 16px !important;
+            font-size: 14px !important;
+            background: transparent !important;
+            color: var(--text-primary) !important;
+            border: none !important;
+            border-radius: 8px !important;
+            text-align: left !important;
+            min-width: auto !important;
+            box-shadow: none !important;
+            cursor: pointer;
+        }
+
+        .docs-popup-item:hover {
+            background: var(--bg-primary) !important;
+            color: var(--accent) !important;
+            transform: none !important;
+        }
+
+        .docs-popup-divider {
+            height: 1px;
+            background: var(--border-color);
+            margin: 4px 8px;
+        }
+
+        /* Mobile Game History Cards */
+        .history-mobile {
+            display: none;
+        }
+
+        .history-mobile-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 16px;
+            background: var(--bg-card);
+            border-radius: 10px;
+            margin-bottom: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .history-mobile-card-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .history-mobile-card-commander {
+            color: var(--text-primary);
+            font-size: 14px;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .history-mobile-card-date {
             color: var(--text-muted);
-            opacity: 0.5;
+            font-size: 12px;
+            margin-top: 2px;
+        }
+
+        .history-mobile-card-result {
+            font-size: 12px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 6px;
+            margin: 0 12px;
+            flex-shrink: 0;
+        }
+
+        .history-mobile-card-result.win {
+            color: var(--success);
+            background: rgba(0, 184, 148, 0.15);
+        }
+
+        .history-mobile-card-result.loss {
+            color: var(--danger);
+            background: rgba(255, 107, 107, 0.15);
+        }
+
+        .history-mobile-view-btn {
+            padding: 6px 14px !important;
+            font-size: 12px !important;
+            min-width: auto !important;
+            background: var(--bg-secondary) !important;
+            color: var(--text-secondary) !important;
+            border: 1px solid var(--border-color) !important;
+            border-radius: 8px !important;
+            box-shadow: none !important;
+            flex-shrink: 0;
+        }
+
+        .history-mobile-view-btn:hover {
+            color: var(--accent) !important;
+            border-color: var(--accent) !important;
+        }
+
+        .history-mobile-empty {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-muted);
+        }
+
+        /* Game Detail Modal */
+        .game-detail-modal-content {
+            max-width: 450px;
+            width: 90%;
+            padding: 0;
+        }
+
+        .game-detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .game-detail-header h3 {
+            color: var(--accent);
+            margin: 0;
+            font-size: 1.2em;
+        }
+
+        .game-detail-body {
+            padding: 20px 24px;
+        }
+
+        .game-detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .game-detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .game-detail-label {
+            color: var(--text-muted);
+            font-size: 13px;
+            flex-shrink: 0;
+            margin-right: 16px;
+        }
+
+        .game-detail-value {
+            color: var(--text-primary);
+            font-size: 14px;
+            text-align: right;
+        }
+
+        .game-detail-actions {
+            display: flex;
+            gap: 10px;
+            padding: 16px 24px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .game-detail-actions button {
+            flex: 1;
+        }
+
+        @media (max-width: 768px) {
+            .history-desktop {
+                display: none !important;
+            }
+            .history-mobile {
+                display: block !important;
+            }
         }
 
         /* Import Modal */
@@ -1273,6 +1500,107 @@
 
         .buddy-item .delete-buddy-btn:hover {
             background: rgba(255, 100, 100, 0.2);
+        }
+
+        /* Friend Request Badge */
+        .friend-request-badge {
+            background: var(--danger);
+            color: white;
+            font-size: 11px;
+            font-weight: 700;
+            min-width: 20px;
+            height: 20px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 6px;
+        }
+
+        /* Friend Request Items */
+        .friend-request-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: var(--bg-primary);
+            border-radius: 10px;
+            margin-bottom: 8px;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        .friend-request-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .friend-request-name {
+            color: var(--text-primary);
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .friend-request-id {
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        .friend-request-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .accept-request-btn {
+            padding: 6px 14px !important;
+            font-size: 12px !important;
+            min-width: auto !important;
+            background: var(--accent) !important;
+            color: var(--bg-primary) !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+
+        .decline-request-btn {
+            padding: 6px 14px !important;
+            font-size: 12px !important;
+            min-width: auto !important;
+            background: transparent !important;
+            color: var(--text-muted) !important;
+            border: 1px solid var(--border-color) !important;
+            box-shadow: none !important;
+        }
+
+        .decline-request-btn:hover {
+            color: var(--danger) !important;
+            border-color: var(--danger) !important;
+        }
+
+        /* Toast Notification */
+        .app-toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 14px;
+            z-index: 9999;
+            opacity: 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .app-toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        #pending-requests-list {
+            margin-bottom: 12px;
         }
 
         .buddy-select-item {
@@ -1497,6 +1825,9 @@
             z-index: 2000;
             backdrop-filter: blur(4px);
             animation: fadeIn 0.2s ease;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 20px 0;
         }
 
         .modal-content {
@@ -1509,6 +1840,9 @@
             text-align: center;
             box-shadow: 0 20px 60px var(--shadow-color);
             animation: modalSlideIn 0.3s ease;
+            max-height: 90vh;
+            overflow-y: auto;
+            margin: auto;
         }
 
         @keyframes modalSlideIn {
@@ -1623,8 +1957,14 @@
 
         .decklist-modal-body .decklist-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: 1fr;
             gap: 24px;
+        }
+
+        @media (min-width: 768px) {
+            .decklist-modal-body .decklist-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
 
         .decklist-modal-body .decklist-category h4 {
@@ -1660,6 +2000,42 @@
         .decklist-import-container input {
             max-width: 400px;
             margin-bottom: 15px;
+        }
+
+        .decklist-textarea {
+            width: 100%;
+            min-height: 300px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: vertical;
+            box-sizing: border-box;
+        }
+
+        .decklist-textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .decklist-textarea::placeholder {
+            color: var(--text-muted);
+        }
+
+        .decklist-import-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+            padding: 10px 24px !important;
+            font-size: 14px !important;
+        }
+
+        .edit-decklist-btn {
+            padding: 8px 16px !important;
+            font-size: 13px !important;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
         }
 
         /* Cloud Sync UI */
@@ -1891,10 +2267,6 @@
                 font-size: 14px;
             }
 
-            /* Export buttons */
-            .export-buttons {
-                flex-direction: column;
-            }
 
             /* Tables scroll horizontally */
             table {
@@ -1939,6 +2311,41 @@
         }
 
         /* Mobile Landscape Mode */
+        /* Portrait Lock Overlay */
+        .portrait-lock-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--bg-primary);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .portrait-lock-content {
+            text-align: center;
+        }
+
+        .portrait-lock-content p {
+            color: var(--text-secondary);
+            margin-top: 16px;
+            font-size: 16px;
+        }
+
+        @media (max-width: 926px) and (orientation: landscape) {
+            /* Show portrait lock overlay when NOT in life counter */
+            .portrait-lock-overlay {
+                display: flex;
+            }
+
+            body.life-counter-fullscreen .portrait-lock-overlay {
+                display: none !important;
+            }
+        }
+
         @media (max-width: 926px) and (orientation: landscape) {
             /* Hide logo to free up sidebar space */
             .sidebar-header {
@@ -3512,6 +3919,17 @@
 </head>
 
 <body>
+    <!-- Portrait Lock Overlay (shown on mobile landscape for non-Life Counter screens) -->
+    <div id="portrait-lock-overlay" class="portrait-lock-overlay">
+        <div class="portrait-lock-content">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--accent);">
+                <rect x="6" y="2" width="12" height="20" rx="2" ry="2"></rect>
+                <line x1="12" y1="18" x2="12" y2="18.01"></line>
+            </svg>
+            <p>Please rotate your device to portrait</p>
+        </div>
+    </div>
+
     <!-- Login Screen (PWA only) -->
     <div id="login-screen" class="login-screen" style="display: none;">
         <div class="login-container">
@@ -3780,15 +4198,19 @@
 
         <!-- Game History Tab -->
         <div class="tab-content" id="game-history">
-            <h2>Game History</h2>
+            <div class="game-history-header">
+                <h2>Game History</h2>
+                <button id="docs-menu-btn" class="docs-btn">Docs</button>
+            </div>
             <div id="history-success" class="success-message"></div>
 
-            <div class="export-buttons">
-                <button id="export-csv" class="secondary">📊 Export to CSV</button>
-                <button id="export-json" class="secondary">💾 Export to JSON</button>
-                <span class="export-divider">|</span>
-                <button id="import-data-btn" class="secondary">📥 Import Data</button>
-                <button id="download-template-btn" class="secondary">📄 Download Template</button>
+            <!-- Docs Popup Menu -->
+            <div id="docs-popup" class="docs-popup" style="display: none;">
+                <button id="export-csv" class="docs-popup-item">Export to CSV</button>
+                <button id="export-json" class="docs-popup-item">Export to JSON</button>
+                <div class="docs-popup-divider"></div>
+                <button id="import-data-btn" class="docs-popup-item">Import Data</button>
+                <button id="download-template-btn" class="docs-popup-item">Download Template</button>
                 <input type="file" id="import-file-input" accept=".csv,.json" style="display: none;">
             </div>
 
@@ -3834,7 +4256,8 @@
                 </div>
             </div>
 
-            <table id="game-history-table">
+            <!-- Desktop table -->
+            <table id="game-history-table" class="history-desktop">
                 <thead>
                     <tr>
                         <th>Date</th>
@@ -3851,7 +4274,22 @@
                     </tr>
                 </tbody>
             </table>
+
+            <!-- Mobile card list -->
+            <div id="game-history-mobile" class="history-mobile"></div>
         </div>
+
+    <!-- Game Detail Modal -->
+    <div id="game-detail-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content game-detail-modal-content">
+            <div class="game-detail-header">
+                <h3 id="game-detail-title">Game Details</h3>
+                <button id="game-detail-close" class="modal-close-btn">&times;</button>
+            </div>
+            <div id="game-detail-body" class="game-detail-body"></div>
+            <div id="game-detail-actions" class="game-detail-actions"></div>
+        </div>
+    </div>
 
         <!-- Statistics Tab -->
         <div class="tab-content" id="statistics">
@@ -3876,7 +4314,7 @@
             <div class="stats-grid"
                 style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 30px;">
                 <div class="stat-card" style="border-left: 4px solid #ffd700; padding: 16px;">
-                    <h3 style="margin: 0 0 8px 0; color: #ffd700; font-size: 0.85em;">Total Games</h3>
+                    <h3 style="margin: 0 0 8px 0; color: #ffd700; font-size: 0.85em;">Total Games Played</h3>
                     <p id="total-games" style="font-size: 1.8em; margin: 0; font-weight: 700;">0</p>
                 </div>
 
@@ -3900,9 +4338,14 @@
                     <p id="current-streak" style="font-size: 1.8em; margin: 0; font-weight: 700;">-</p>
                 </div>
 
-                <div class="stat-card" style="border-left: 4px solid #e67e22; padding: 16px;">
-                    <h3 style="margin: 0 0 8px 0; color: #e67e22; font-size: 0.85em;">Best Streak</h3>
-                    <p id="best-streak" style="font-size: 1.8em; margin: 0; font-weight: 700;">-</p>
+                <div class="stat-card" style="border-left: 4px solid #00b894; padding: 16px;">
+                    <h3 style="margin: 0 0 8px 0; color: #00b894; font-size: 0.85em;">Longest Win Streak</h3>
+                    <p id="best-win-streak" style="font-size: 1.8em; margin: 0; font-weight: 700; color: #00b894;">-</p>
+                </div>
+
+                <div class="stat-card" style="border-left: 4px solid #ff6b6b; padding: 16px;">
+                    <h3 style="margin: 0 0 8px 0; color: #ff6b6b; font-size: 0.85em;">Longest Loss Streak</h3>
+                    <p id="best-loss-streak" style="font-size: 1.8em; margin: 0; font-weight: 700; color: #ff6b6b;">-</p>
                 </div>
             </div>
 
@@ -3917,7 +4360,7 @@
 
             <!-- Most Faced Commanders -->
             <div class="chart-container" style="margin-bottom: 30px;">
-                <h3 style="color: #ffd700; margin: 0 0 20px 0; text-align: center;">Top 3 Most Faced Commanders</h3>
+                <h3 style="color: #ffd700; margin: 0 0 20px 0; text-align: center;">Most Faced Commanders</h3>
                 <div id="most-faced-commanders"
                     style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
                     <div style="text-align: center; padding: 20px;">
@@ -4032,7 +4475,7 @@
                     <div class="profile-row" style="margin-top: 15px;">
                         <label for="profile-username" style="margin-bottom: 0;">Username</label>
                         <div class="username-edit">
-                            <input type="text" id="profile-username" placeholder="Enter username..." maxlength="30">
+                            <input type="text" id="profile-username" placeholder="Enter username..." maxlength="12">
                             <button type="button" id="save-username-btn" class="primary">Save</button>
                         </div>
                     </div>
@@ -4043,11 +4486,12 @@
             <div class="buddies-section">
                 <div class="section-header">
                     <div>
-                        <h3>Online Friends</h3>
+                        <h3 style="display: flex; align-items: center; gap: 8px;">Online Friends <span id="friend-request-badge" class="friend-request-badge" style="display: none;">0</span></h3>
                         <p class="section-subtitle">Friends using Seasons Past - view their stats</p>
                     </div>
                     <button type="button" id="add-online-friend-btn" class="primary">+ Add Friend</button>
                 </div>
+                <div id="pending-requests-list"></div>
                 <div id="online-friends-list" class="buddies-list">
                     <p class="empty-list-message">No online friends yet. Share your Friend ID with friends to connect!</p>
                 </div>
@@ -4178,7 +4622,7 @@
             <div class="friend-stats-grid">
                 <div class="stat-card">
                     <div class="stat-value" id="friend-total-games">0</div>
-                    <div class="stat-label">Total Games</div>
+                    <div class="stat-label">Total Games Played</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-value" id="friend-wins">0</div>
@@ -4363,6 +4807,7 @@
                     <p id="decklist-modal-commander">Commander Name</p>
                 </div>
                 <div class="decklist-modal-header-actions">
+                    <button id="edit-decklist-btn" class="edit-decklist-btn" style="display: none;">Edit</button>
                     <button id="copy-decklist-btn" class="copy-decklist-btn" style="display: none;">Copy Decklist</button>
                     <button id="decklist-modal-close" class="modal-close-btn">&times;</button>
                 </div>

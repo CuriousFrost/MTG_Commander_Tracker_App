@@ -402,7 +402,7 @@ class FirebaseSync {
         }
     }
 
-    // Add friend by Friend ID
+    // Send friend request by Friend ID
     async addFriendByFriendId(friendId) {
         if (!this.isSignedIn()) {
             throw new Error('Must be signed in to add friends');
@@ -414,39 +414,132 @@ class FirebaseSync {
         }
 
         try {
-            // Get current user's profile
             const userProfile = await this.getUserProfile();
             if (!userProfile) {
                 throw new Error('User profile not found');
             }
 
-            // Can't add yourself
             if (normalizedId === userProfile.friendId) {
                 throw new Error('You cannot add yourself as a friend');
             }
 
-            // Check if already friends
             if (userProfile.friends && userProfile.friends.includes(normalizedId)) {
                 throw new Error('Already friends with this user');
             }
 
-            // Look up friend ID
+            // Look up friend ID to get their UID
             const friendIdDoc = await this.db.collection('friendIds').doc(normalizedId).get();
             if (!friendIdDoc.exists) {
                 throw new Error('Friend ID not found');
             }
 
-            // Add to friends list
+            const targetUid = friendIdDoc.data().uid;
+
+            // Check if request already sent
+            const targetUserDoc = await this.db.collection('users').doc(targetUid).get();
+            const targetData = targetUserDoc.data();
+            const pendingRequests = targetData.pendingFriendRequests || [];
+            if (pendingRequests.some(r => r.fromFriendId === userProfile.friendId)) {
+                throw new Error('Friend request already sent');
+            }
+
+            // Add friend request to target user's pendingFriendRequests
+            const targetDocRef = this.db.collection('users').doc(targetUid);
+            await targetDocRef.update({
+                pendingFriendRequests: firebase.firestore.FieldValue.arrayUnion({
+                    fromFriendId: userProfile.friendId,
+                    fromUsername: userProfile.username,
+                    timestamp: new Date().toISOString()
+                })
+            });
+
+            console.log('Friend request sent to:', normalizedId);
+            return true;
+        } catch (error) {
+            console.error('Error sending friend request:', error);
+            throw error;
+        }
+    }
+
+    // Get pending friend requests for current user
+    async getPendingFriendRequests() {
+        if (!this.isSignedIn()) return [];
+
+        try {
             const userDocRef = this.db.collection('users').doc(this.user.uid);
+            const docSnap = await userDocRef.get();
+            if (!docSnap.exists) return [];
+
+            return docSnap.data().pendingFriendRequests || [];
+        } catch (error) {
+            console.error('Error getting friend requests:', error);
+            return [];
+        }
+    }
+
+    // Accept a friend request
+    async acceptFriendRequest(fromFriendId) {
+        if (!this.isSignedIn()) {
+            throw new Error('Must be signed in');
+        }
+
+        try {
+            const userProfile = await this.getUserProfile();
+            const userDocRef = this.db.collection('users').doc(this.user.uid);
+
+            // Find the request to remove it
+            const docSnap = await userDocRef.get();
+            const pendingRequests = docSnap.data().pendingFriendRequests || [];
+            const request = pendingRequests.find(r => r.fromFriendId === fromFriendId);
+            if (!request) throw new Error('Friend request not found');
+
+            // Add to both users' friends lists
             await userDocRef.update({
-                friends: firebase.firestore.FieldValue.arrayUnion(normalizedId),
+                friends: firebase.firestore.FieldValue.arrayUnion(fromFriendId),
+                pendingFriendRequests: firebase.firestore.FieldValue.arrayRemove(request),
                 lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
             });
 
-            console.log('Friend added:', normalizedId);
+            // Also add current user to the requester's friends list
+            const friendIdDoc = await this.db.collection('friendIds').doc(fromFriendId).get();
+            if (friendIdDoc.exists) {
+                const friendUid = friendIdDoc.data().uid;
+                const friendDocRef = this.db.collection('users').doc(friendUid);
+                await friendDocRef.update({
+                    friends: firebase.firestore.FieldValue.arrayUnion(userProfile.friendId),
+                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            }
+
+            console.log('Friend request accepted:', fromFriendId);
             return true;
         } catch (error) {
-            console.error('Error adding friend:', error);
+            console.error('Error accepting friend request:', error);
+            throw error;
+        }
+    }
+
+    // Decline a friend request
+    async declineFriendRequest(fromFriendId) {
+        if (!this.isSignedIn()) {
+            throw new Error('Must be signed in');
+        }
+
+        try {
+            const userDocRef = this.db.collection('users').doc(this.user.uid);
+            const docSnap = await userDocRef.get();
+            const pendingRequests = docSnap.data().pendingFriendRequests || [];
+            const request = pendingRequests.find(r => r.fromFriendId === fromFriendId);
+            if (!request) throw new Error('Friend request not found');
+
+            await userDocRef.update({
+                pendingFriendRequests: firebase.firestore.FieldValue.arrayRemove(request)
+            });
+
+            console.log('Friend request declined:', fromFriendId);
+            return true;
+        } catch (error) {
+            console.error('Error declining friend request:', error);
             throw error;
         }
     }

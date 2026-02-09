@@ -1,6 +1,6 @@
 // Service Worker for MTG Commander Tracker PWA
-const CACHE_NAME = 'mtg-commander-tracker-v24';
-const STATIC_CACHE_NAME = 'mtg-commander-static-v24';
+const CACHE_NAME = 'mtg-commander-tracker-v25';
+const STATIC_CACHE_NAME = 'mtg-commander-static-v25';
 
 // Static assets to cache immediately (relative paths for GitHub Pages compatibility)
 const STATIC_ASSETS = [
@@ -21,13 +21,6 @@ const STATIC_ASSETS = [
 // API endpoints that use network-first strategy
 const API_PATTERNS = [
     /api\.scryfall\.com/
-];
-
-// Requests the service worker should not intercept (handled by app code)
-const BYPASS_PATTERNS = [
-    /api2\.moxfield\.com/,
-    /corsproxy\.io/,
-    /allorigins\.win/
 ];
 
 // Install event - cache static assets
@@ -69,12 +62,6 @@ self.addEventListener('fetch', (event) => {
 
     // Skip non-GET requests
     if (event.request.method !== 'GET') {
-        return;
-    }
-
-    // Skip requests that the app handles directly (Moxfield, CORS proxies)
-    const shouldBypass = BYPASS_PATTERNS.some(pattern => pattern.test(url.href));
-    if (shouldBypass) {
         return;
     }
 

@@ -301,21 +301,117 @@ function updateProfileDisplay() {
     document.getElementById('add-online-friend-btn').disabled = false;
 }
 
+let pendingFriendRequests = [];
+
 async function loadOnlineFriends() {
     if (!storage.isSignedIn()) {
         onlineFriends = [];
+        pendingFriendRequests = [];
         renderOnlineFriendsList();
+        renderPendingRequests();
         return;
     }
 
     try {
         onlineFriends = await storage.getOnlineFriends();
+        pendingFriendRequests = await storage.getPendingFriendRequests();
         renderOnlineFriendsList();
+        renderPendingRequests();
     } catch (error) {
         console.error('Error loading online friends:', error);
         onlineFriends = [];
+        pendingFriendRequests = [];
         renderOnlineFriendsList();
+        renderPendingRequests();
     }
+}
+
+// Toast notification
+function showToast(message, duration = 3000) {
+    let toast = document.getElementById('app-toast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'app-toast';
+        toast.className = 'app-toast';
+        document.body.appendChild(toast);
+    }
+    toast.textContent = message;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), duration);
+}
+
+// Render pending friend requests
+function renderPendingRequests() {
+    const container = document.getElementById('pending-requests-list');
+    const badge = document.getElementById('friend-request-badge');
+
+    if (badge) {
+        if (pendingFriendRequests.length > 0) {
+            badge.textContent = pendingFriendRequests.length;
+            badge.style.display = 'inline-flex';
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+
+    if (!container) return;
+
+    if (pendingFriendRequests.length === 0) {
+        container.innerHTML = '';
+        return;
+    }
+
+    container.innerHTML = `
+        <h4 style="color: var(--accent); margin: 0 0 12px 0; font-size: 0.9em;">Friend Requests (${pendingFriendRequests.length})</h4>
+        ${pendingFriendRequests.map(req => `
+            <div class="friend-request-item">
+                <div class="friend-request-info">
+                    <span class="friend-request-name">${escapeHtml(req.fromUsername)}</span>
+                    <span class="friend-request-id">${req.fromFriendId}</span>
+                </div>
+                <div class="friend-request-actions">
+                    <button class="accept-request-btn" data-friend-id="${req.fromFriendId}">Accept</button>
+                    <button class="decline-request-btn" data-friend-id="${req.fromFriendId}">Decline</button>
+                </div>
+            </div>
+        `).join('')}
+    `;
+
+    container.querySelectorAll('.accept-request-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            const friendId = e.target.dataset.friendId;
+            e.target.disabled = true;
+            e.target.textContent = '...';
+            try {
+                await storage.acceptFriendRequest(friendId);
+                showToast('Friend request accepted!');
+                await loadOnlineFriends();
+            } catch (err) {
+                console.error('Error accepting request:', err);
+                showToast('Failed to accept request');
+                e.target.disabled = false;
+                e.target.textContent = 'Accept';
+            }
+        });
+    });
+
+    container.querySelectorAll('.decline-request-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            const friendId = e.target.dataset.friendId;
+            e.target.disabled = true;
+            e.target.textContent = '...';
+            try {
+                await storage.declineFriendRequest(friendId);
+                showToast('Friend request declined');
+                await loadOnlineFriends();
+            } catch (err) {
+                console.error('Error declining request:', err);
+                showToast('Failed to decline request');
+                e.target.disabled = false;
+                e.target.textContent = 'Decline';
+            }
+        });
+    });
 }
 
 function renderOnlineFriendsList() {
@@ -517,6 +613,11 @@ document.getElementById('save-username-btn')?.addEventListener('click', async ()
         return;
     }
 
+    if (newUsername.length > 12) {
+        alert('Username must be 12 characters or less');
+        return;
+    }
+
     btn.disabled = true;
     btn.textContent = 'Saving...';
 
@@ -566,14 +667,14 @@ document.getElementById('add-friend-confirm-btn')?.addEventListener('click', asy
     }
 
     btn.disabled = true;
-    btn.textContent = 'Adding...';
+    btn.textContent = 'Sending...';
 
     try {
         await storage.addFriendByFriendId(friendId);
         document.getElementById('add-friend-modal').style.display = 'none';
-        await loadOnlineFriends();
+        showToast('Friend request sent!');
     } catch (err) {
-        error.textContent = err.message || 'Failed to add friend';
+        error.textContent = err.message || 'Failed to send friend request';
         error.style.display = 'block';
     } finally {
         btn.disabled = false;
@@ -971,121 +1072,32 @@ async function getCommanderImage(commanderName) {
         return null;
     }
 }
-// Fetch decklist from Moxfield
-async function fetchMoxfieldDeck(deckUrl) {
-    try {
-        // Extract deck ID from URL or raw ID
-        // Supports: full URL, short URL, or just the deck ID
-        let deckId;
-        if (deckUrl.includes('/decks/')) {
-            deckId = deckUrl.split('/decks/')[1]?.split('?')[0]?.split('#')[0]?.split('/')[0];
-        } else {
-            // Assume raw deck ID was entered
-            deckId = deckUrl.trim().split('?')[0].split('#')[0].split('/').pop();
-        }
+// Parse decklist text into card list
+function parseDecklistText(text) {
+    const lines = text.split('\n');
+    const cards = [];
 
-        if (!deckId) {
-            throw new Error('Invalid Moxfield URL. Please use a URL like: https://www.moxfield.com/decks/DECK_ID');
-        }
+    for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith('//') || trimmed.startsWith('#')) continue;
 
-        const apiUrl = `https://api2.moxfield.com/v2/decks/all/${deckId}`;
-
-        let data;
-
-        // Try direct fetch first (works in Electron), then CORS proxies
-        try {
-            const directResponse = await fetch(apiUrl);
-            if (directResponse.ok) {
-                data = await directResponse.json();
-            } else {
-                throw new Error(`HTTP ${directResponse.status}`);
-            }
-        } catch (directError) {
-            console.log('Direct Moxfield fetch failed, trying CORS proxies...');
-
-            // Try multiple CORS proxies in order
-            const proxies = [
-                `https://api.allorigins.win/get?url=${encodeURIComponent(apiUrl)}`,
-                `https://corsproxy.io/?${encodeURIComponent(apiUrl)}`,
-            ];
-
-            let proxySuccess = false;
-            for (const proxyUrl of proxies) {
-                try {
-                    const controller = new AbortController();
-                    const timeout = setTimeout(() => controller.abort(), 15000);
-
-                    const proxyResponse = await fetch(proxyUrl, { signal: controller.signal });
-                    clearTimeout(timeout);
-
-                    if (!proxyResponse.ok) continue;
-
-                    const contentType = proxyResponse.headers.get('content-type') || '';
-
-                    if (proxyUrl.includes('allorigins.win')) {
-                        // allorigins wraps response in {contents: "..."}
-                        const wrapper = await proxyResponse.json();
-                        data = JSON.parse(wrapper.contents);
-                    } else {
-                        data = await proxyResponse.json();
-                    }
-
-                    proxySuccess = true;
-                    break;
-                } catch (proxyError) {
-                    console.log(`Proxy failed: ${proxyUrl}`, proxyError.message);
-                    continue;
-                }
-            }
-
-            if (!proxySuccess) {
-                throw new Error('Unable to fetch deck from Moxfield. Make sure the deck is public and try again later.');
-            }
-        }
-
-        // Parse the decklist
-        const decklist = {
-            mainboard: {},
-            commander: data.commanders || {},
-            sideboard: data.sideboard || {}
-        };
-
-        // Group mainboard by card type
-        Object.entries(data.mainboard || {}).forEach(([cardName, cardData]) => {
-            const type = cardData.card.type_line || 'Other';
-            const category = categorizeCard(type);
-
-            if (!decklist.mainboard[category]) {
-                decklist.mainboard[category] = [];
-            }
-
-            decklist.mainboard[category].push({
-                name: cardName,
-                quantity: cardData.quantity,
-                type: type
+        // Match patterns: "1x Card Name", "1 Card Name", or just "Card Name"
+        const match = trimmed.match(/^(\d+)\s*x?\s+(.+)$/i);
+        if (match) {
+            cards.push({
+                quantity: parseInt(match[1], 10),
+                name: match[2].trim()
             });
-        });
-
-        return decklist;
-    } catch (error) {
-        console.error('Error fetching Moxfield deck:', error);
-        throw error;
+        } else if (/^[A-Za-z]/.test(trimmed)) {
+            // Line starts with a letter - treat as card name with quantity 1
+            cards.push({
+                quantity: 1,
+                name: trimmed
+            });
+        }
     }
-}
 
-// Helper function to categorize cards
-function categorizeCard(typeLine) {
-    const lower = typeLine.toLowerCase();
-
-    if (lower.includes('creature')) return 'Creatures';
-    if (lower.includes('instant')) return 'Instants';
-    if (lower.includes('sorcery')) return 'Sorceries';
-    if (lower.includes('enchantment')) return 'Enchantments';
-    if (lower.includes('artifact')) return 'Artifacts';
-    if (lower.includes('planeswalker')) return 'Planeswalkers';
-    if (lower.includes('land')) return 'Lands';
-
-    return 'Other';
+    return cards;
 }
 // Animate number counting
 function animateValue(element, start, end, duration) {
@@ -1423,13 +1435,10 @@ async function displayDecks() {
         const imageUrl = await getCommanderImage(deck.commander.name);
 
         // Decklist section
-        const hasDecklist = deck.decklist && Object.keys(deck.decklist).length > 0;
-        const decklistButtonText = hasDecklist ? 'Decklist' : 'Moxfield';
+        const decklistButtonText = 'Decklist';
         const isArchived = deck.archived;
         const archiveButtonText = isArchived ? 'Restore' : 'Retire';
-        const archiveButtonStyle = isArchived
-            ? 'background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);'
-            : 'background: linear-gradient(135deg, #6c757d 0%, #495057 100%);';
+        const archiveButtonStyle = '';
         const archivedClass = isArchived ? 'deck-card--archived' : '';
         const archivedBadge = isArchived
             ? '<span class="deck-card__badge">Retired</span>'
@@ -1591,56 +1600,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// Render Moxfield input form
-function renderMoxfieldInput(deckId) {
-    return `
-        <div>
-            <h3 style="color: #ffd700; margin-bottom: 10px;">Import Decklist from Moxfield</h3>
-            <p style="color: #888; margin-bottom: 15px;">Paste your Moxfield deck URL (e.g., https://www.moxfield.com/decks/YOUR_DECK_ID)</p>
-            <div style="display: flex; gap: 10px;">
-                <input type="text" 
-                       id="moxfield-url-${deckId}" 
-                       placeholder="https://www.moxfield.com/decks/..." 
-                       style="flex: 1;">
-                <button onclick="importMoxfieldDeck(${deckId})" 
-                        style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                    Import
-                </button>
-            </div>
-            <div id="import-status-${deckId}" style="margin-top: 10px;"></div>
-        </div>
-    `;
-}
-
-// Render decklist
-function renderDecklist(decklist) {
-    let html = '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">';
-    
-    // Commander section
-    if (decklist.commander && Object.keys(decklist.commander).length > 0) {
-        html += '<div>';
-        html += '<h4 style="color: #ffd700; margin-bottom: 10px;">Commander</h4>';
-        Object.entries(decklist.commander).forEach(([name, data]) => {
-            html += `<div style="padding: 4px 0;">${data.quantity}x ${name}</div>`;
-        });
-        html += '</div>';
-    }
-    
-    // Mainboard sections
-    Object.entries(decklist.mainboard || {}).forEach(([category, cards]) => {
-        if (cards.length > 0) {
-            html += '<div>';
-            html += `<h4 style="color: #ffd700; margin-bottom: 10px;">${category} (${cards.length})</h4>`;
-            cards.forEach(card => {
-                html += `<div style="padding: 4px 0;">${card.quantity}x ${card.name}</div>`;
-            });
-            html += '</div>';
-        }
-    });
-    
-    html += '</div>';
-    return html;
-}
 
 // Current deck for copy functionality
 let currentDecklistDeck = null;
@@ -1661,14 +1620,17 @@ window.toggleDecklist = function(deckId) {
     titleEl.textContent = deck.name;
     commanderEl.textContent = deck.commander.name;
 
+    const editBtn = document.getElementById('edit-decklist-btn');
     const hasDecklist = deck.decklist && Object.keys(deck.decklist.mainboard || {}).length > 0;
 
     if (hasDecklist) {
         bodyEl.innerHTML = renderDecklistForModal(deck.decklist);
         copyBtn.style.display = 'inline-block';
+        if (editBtn) editBtn.style.display = 'inline-block';
     } else {
-        bodyEl.innerHTML = renderMoxfieldInputForModal(deck.id);
+        bodyEl.innerHTML = renderDecklistInputForModal(deck.id);
         copyBtn.style.display = 'none';
+        if (editBtn) editBtn.style.display = 'none';
     }
 
     modal.style.display = 'flex';
@@ -1690,7 +1652,7 @@ function renderDecklistForModal(decklist) {
     }
 
     // Mainboard sections
-    const categoryOrder = ['Creatures', 'Instants', 'Sorceries', 'Enchantments', 'Artifacts', 'Planeswalkers', 'Lands', 'Other'];
+    const categoryOrder = ['Cards', 'Creatures', 'Instants', 'Sorceries', 'Enchantments', 'Artifacts', 'Planeswalkers', 'Lands', 'Other'];
 
     categoryOrder.forEach(category => {
         const cards = decklist.mainboard?.[category];
@@ -1709,19 +1671,16 @@ function renderDecklistForModal(decklist) {
     return html;
 }
 
-// Render Moxfield import for modal
-function renderMoxfieldInputForModal(deckId) {
+// Render decklist text paste input for modal
+function renderDecklistInputForModal(deckId, existingText) {
+    const prefilledText = existingText || '';
     return `
         <div class="decklist-import-container">
-            <h4 style="color: var(--accent); margin-bottom: 10px;">Import Decklist from Moxfield</h4>
-            <p>Paste your Moxfield deck URL to import your decklist</p>
-            <input type="text"
-                   id="moxfield-url-${deckId}"
-                   placeholder="https://www.moxfield.com/decks/..."
-                   style="width: 100%;">
+            <h4 style="color: var(--accent); margin-bottom: 10px;">Import Decklist</h4>
+            <p>Paste your decklist below (from Moxfield, Archidekt, EDHREC, or any source)</p>
+            <textarea id="decklist-paste-${deckId}" class="decklist-textarea" placeholder="Paste your decklist here...&#10;&#10;Example:&#10;1x Sol Ring&#10;1x Command Tower&#10;1x Arcane Signet">${escapeHtml(prefilledText)}</textarea>
             <div style="margin-top: 15px;">
-                <button onclick="importMoxfieldDeckFromModal(${deckId})"
-                        style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <button onclick="importDecklistFromModal(${deckId})" class="decklist-import-btn">
                     Import Decklist
                 </button>
             </div>
@@ -1730,24 +1689,44 @@ function renderMoxfieldInputForModal(deckId) {
     `;
 }
 
-// Import from modal
-window.importMoxfieldDeckFromModal = async function(deckId) {
-    const urlInput = document.getElementById(`moxfield-url-${deckId}`);
+// Import decklist from text paste in modal
+window.importDecklistFromModal = async function(deckId) {
+    const textarea = document.getElementById(`decklist-paste-${deckId}`);
     const statusDiv = document.getElementById(`import-status-${deckId}`);
-    const url = urlInput.value.trim();
+    const rawText = textarea.value.trim();
 
-    if (!url) {
-        statusDiv.innerHTML = '<p style="color: var(--danger);">Please enter a Moxfield URL</p>';
+    if (!rawText) {
+        statusDiv.innerHTML = '<p style="color: var(--danger);">Please paste a decklist</p>';
         return;
     }
 
-    statusDiv.innerHTML = '<p style="color: var(--accent);">Importing decklist...</p>';
+    const cards = parseDecklistText(rawText);
+    if (cards.length === 0) {
+        statusDiv.innerHTML = '<p style="color: var(--danger);">No cards found. Use format: 1x Card Name</p>';
+        return;
+    }
+
+    statusDiv.innerHTML = `<p style="color: var(--accent);">Importing ${cards.length} cards...</p>`;
 
     try {
-        const decklist = await fetchMoxfieldDeck(url);
+        // Build decklist in same format as before for backward compatibility
+        const mainboard = { 'Cards': [] };
+        for (const card of cards) {
+            mainboard['Cards'].push({
+                name: card.name,
+                quantity: card.quantity
+            });
+        }
+
+        const decklist = {
+            mainboard: mainboard,
+            commander: {},
+            rawText: rawText
+        };
+
         myDecks = await storage.updateDeck(deckId, { decklist });
 
-        statusDiv.innerHTML = '<p style="color: var(--success);">✓ Decklist imported successfully!</p>';
+        statusDiv.innerHTML = '<p style="color: var(--success);">Decklist imported successfully!</p>';
 
         // Refresh modal content
         setTimeout(() => {
@@ -1760,9 +1739,32 @@ window.importMoxfieldDeckFromModal = async function(deckId) {
     }
 };
 
+// Edit existing decklist
+window.editDecklist = function(deckId) {
+    const deck = myDecks.find(d => d.id === deckId);
+    if (!deck) return;
+
+    const bodyEl = document.getElementById('decklist-modal-body');
+    const copyBtn = document.getElementById('copy-decklist-btn');
+    const editBtn = document.getElementById('edit-decklist-btn');
+
+    // Get raw text from stored decklist, or reconstruct from cards
+    let rawText = deck.decklist?.rawText || '';
+    if (!rawText && deck.decklist) {
+        rawText = decklistToText(deck);
+    }
+
+    bodyEl.innerHTML = renderDecklistInputForModal(deckId, rawText);
+    copyBtn.style.display = 'none';
+    if (editBtn) editBtn.style.display = 'none';
+};
+
 // Convert decklist to text format for copying
 function decklistToText(deck) {
     if (!deck || !deck.decklist) return '';
+
+    // If we have stored raw text, use it directly
+    if (deck.decklist.rawText) return deck.decklist.rawText;
 
     let text = `// ${deck.name}\n`;
     text += `// Commander: ${deck.commander.name}\n\n`;
@@ -1779,12 +1781,12 @@ function decklistToText(deck) {
     }
 
     // Mainboard by category
-    const categoryOrder = ['Creatures', 'Instants', 'Sorceries', 'Enchantments', 'Artifacts', 'Planeswalkers', 'Lands', 'Other'];
+    const categoryOrder = ['Cards', 'Creatures', 'Instants', 'Sorceries', 'Enchantments', 'Artifacts', 'Planeswalkers', 'Lands', 'Other'];
 
     categoryOrder.forEach(category => {
         const cards = decklist.mainboard?.[category];
         if (cards && cards.length > 0) {
-            text += `// ${category}\n`;
+            if (category !== 'Cards') text += `// ${category}\n`;
             cards.forEach(card => {
                 text += `${card.quantity} ${card.name}\n`;
             });
@@ -1795,11 +1797,12 @@ function decklistToText(deck) {
     return text.trim();
 }
 
-// Close decklist modal and copy functionality
+// Close decklist modal, copy and edit functionality
 document.addEventListener('DOMContentLoaded', () => {
     const modal = document.getElementById('decklist-modal');
     const closeBtn = document.getElementById('decklist-modal-close');
     const copyBtn = document.getElementById('copy-decklist-btn');
+    const editBtn = document.getElementById('edit-decklist-btn');
 
     if (closeBtn) {
         closeBtn.addEventListener('click', () => {
@@ -1822,6 +1825,13 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (err) {
                 console.error('Failed to copy:', err);
             }
+        });
+    }
+
+    if (editBtn) {
+        editBtn.addEventListener('click', () => {
+            if (!currentDecklistDeck) return;
+            window.editDecklist(currentDecklistDeck.id);
         });
     }
 
@@ -1872,36 +1882,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Import Moxfield deck
-window.importMoxfieldDeck = async function(deckId) {
-    const urlInput = document.getElementById(`moxfield-url-${deckId}`);
-    const statusDiv = document.getElementById(`import-status-${deckId}`);
-    const url = urlInput.value.trim();
-    
-    if (!url) {
-        statusDiv.innerHTML = '<p style="color: #ff6b6b;">Please enter a Moxfield URL</p>';
-        return;
-    }
-    
-    statusDiv.innerHTML = '<p style="color: #ffd700;">Importing decklist...</p>';
-    
-    try {
-        const decklist = await fetchMoxfieldDeck(url);
-        
-        // Update deck with decklist
-        myDecks = await storage.updateDeck(deckId, { decklist });
-        
-        statusDiv.innerHTML = '<p style="color: #00b894;">✓ Decklist imported successfully!</p>';
-        
-        // Refresh deck display after a short delay
-        setTimeout(() => {
-            displayDecks();
-        }, 1000);
-        
-    } catch (error) {
-        statusDiv.innerHTML = `<p style="color: #ff6b6b;">Error: ${escapeHtml(error.message)}</p>`;
-    }
-};
 
 // Delete deck
 window.deleteDeck = async function (deckId) {
@@ -2572,8 +2552,11 @@ function applyFilters(games) {
 function displayGameHistory() {
     const historyBody = document.getElementById('game-history-body');
 
+    const mobileContainer = document.getElementById('game-history-mobile');
+
     if (allGames.length === 0) {
         historyBody.innerHTML = '<tr><td colspan="6" style="padding: 20px; text-align: center;">No games logged yet</td></tr>';
+        if (mobileContainer) mobileContainer.innerHTML = '<div class="history-mobile-empty">No games logged yet</div>';
         return;
     }
 
@@ -2659,9 +2642,11 @@ function displayGameHistory() {
 
     if (sortedGames.length === 0) {
         historyBody.innerHTML = '<tr><td colspan="6" style="padding: 20px; text-align: center;">No games match the current filters</td></tr>';
+        if (mobileContainer) mobileContainer.innerHTML = '<div class="history-mobile-empty">No games match the current filters</div>';
         return;
     }
 
+    // Desktop table
     historyBody.innerHTML = sortedGames.map(game => {
         const resultColor = game.won ? '#00b894' : '#ff6b6b';
         const resultText = game.won ? 'WIN' : 'LOSS';
@@ -2693,7 +2678,96 @@ function displayGameHistory() {
       </tr>
     `;
     }).join('');
+
+    // Mobile card list
+    if (mobileContainer) {
+        mobileContainer.innerHTML = sortedGames.map(game => {
+            const resultText = game.won ? 'WIN' : 'LOSS';
+            const resultClass = game.won ? 'win' : 'loss';
+            return `
+                <div class="history-mobile-card">
+                    <div class="history-mobile-card-info">
+                        <div class="history-mobile-card-commander">${escapeHtml(game.myDeck.commander.name)}</div>
+                        <div class="history-mobile-card-date">${game.date}</div>
+                    </div>
+                    <span class="history-mobile-card-result ${resultClass}">${resultText}</span>
+                    <button class="history-mobile-view-btn" onclick="viewGameDetail(${game.id})">View</button>
+                </div>
+            `;
+        }).join('');
+    }
 }
+
+// View game detail modal (mobile)
+window.viewGameDetail = function(gameId) {
+    const game = allGames.find(g => g.id === gameId);
+    if (!game) return;
+
+    const modal = document.getElementById('game-detail-modal');
+    const titleEl = document.getElementById('game-detail-title');
+    const bodyEl = document.getElementById('game-detail-body');
+    const actionsEl = document.getElementById('game-detail-actions');
+
+    titleEl.textContent = 'Game Details';
+
+    const resultText = game.won ? 'WIN' : 'LOSS';
+    const resultColor = game.won ? 'var(--success)' : 'var(--danger)';
+    const opponents = game.opponents.map(o => escapeHtml(o.name)).join(', ') || 'None';
+
+    bodyEl.innerHTML = `
+        <div class="game-detail-row">
+            <span class="game-detail-label">Date</span>
+            <span class="game-detail-value">${game.date}</span>
+        </div>
+        <div class="game-detail-row">
+            <span class="game-detail-label">Deck</span>
+            <span class="game-detail-value">${escapeHtml(game.myDeck.name)}</span>
+        </div>
+        <div class="game-detail-row">
+            <span class="game-detail-label">Commander</span>
+            <span class="game-detail-value">${escapeHtml(game.myDeck.commander.name)}</span>
+        </div>
+        <div class="game-detail-row">
+            <span class="game-detail-label">Result</span>
+            <span class="game-detail-value" style="color: ${resultColor}; font-weight: bold;">${resultText}</span>
+        </div>
+        <div class="game-detail-row">
+            <span class="game-detail-label">Winning Colors</span>
+            <span class="game-detail-value">${game.winnerColorIdentity || '-'}</span>
+        </div>
+        <div class="game-detail-row">
+            <span class="game-detail-label">Opponents</span>
+            <span class="game-detail-value">${opponents}</span>
+        </div>
+    `;
+
+    actionsEl.innerHTML = `
+        <button class="secondary" onclick="editGame(${game.id}); document.getElementById('game-detail-modal').style.display='none';">Edit</button>
+        <button class="danger" onclick="deleteGame(${game.id}); document.getElementById('game-detail-modal').style.display='none';">Delete</button>
+    `;
+
+    modal.style.display = 'flex';
+};
+
+// Game detail modal close
+document.addEventListener('DOMContentLoaded', () => {
+    const modal = document.getElementById('game-detail-modal');
+    const closeBtn = document.getElementById('game-detail-close');
+
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+    }
+
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+    }
+});
 
 // Filter event listeners
 document.getElementById('filter-deck').addEventListener('change', (e) => {
@@ -3077,6 +3151,32 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+// Docs menu toggle
+const docsMenuBtn = document.getElementById('docs-menu-btn');
+const docsPopup = document.getElementById('docs-popup');
+
+if (docsMenuBtn && docsPopup) {
+    docsMenuBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isVisible = docsPopup.style.display !== 'none';
+        docsPopup.style.display = isVisible ? 'none' : 'flex';
+    });
+
+    // Close popup when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!docsPopup.contains(e.target) && e.target !== docsMenuBtn) {
+            docsPopup.style.display = 'none';
+        }
+    });
+
+    // Close popup after clicking an option
+    docsPopup.querySelectorAll('.docs-popup-item').forEach(item => {
+        item.addEventListener('click', () => {
+            docsPopup.style.display = 'none';
+        });
+    });
+}
 
 // Export functionality
 document.getElementById('export-csv').addEventListener('click', async () => {
@@ -3494,7 +3594,8 @@ function calculateAndDisplayStats() {
         document.getElementById('total-losses').textContent = '0';
         document.getElementById('win-rate').textContent = '0%';
         document.getElementById('current-streak').textContent = '-';
-        document.getElementById('best-streak').textContent = '-';
+        document.getElementById('best-win-streak').textContent = '-';
+        document.getElementById('best-loss-streak').textContent = '-';
         document.getElementById('most-faced-commanders').innerHTML = '<div style="text-align: center; padding: 20px;"><p style="color: #888;">No games logged yet</p></div>';
 
         // Clear tables
@@ -3952,7 +4053,8 @@ document.querySelector('.sidebar-nav-item[data-tab="statistics"]').addEventListe
 function calculateStreaks(games) {
     if (games.length === 0) {
         document.getElementById('current-streak').textContent = '-';
-        document.getElementById('best-streak').textContent = '-';
+        document.getElementById('best-win-streak').textContent = '-';
+        document.getElementById('best-loss-streak').textContent = '-';
         return;
     }
 
@@ -4017,13 +4119,9 @@ function calculateStreaks(games) {
         streakCard.style.borderLeftColor = '#ff6b6b';
     }
 
-    // Display best streak
-    const bestStreak = Math.max(bestWinStreak, bestLossStreak);
-    const bestStreakType = bestWinStreak >= bestLossStreak ? 'W' : 'L';
-    const bestStreakColor = bestWinStreak >= bestLossStreak ? '#00b894' : '#ff6b6b';
-
-    document.getElementById('best-streak').innerHTML = `${bestStreak}${bestStreakType}`;
-    document.getElementById('best-streak').style.color = bestStreakColor;
+    // Display best streaks
+    document.getElementById('best-win-streak').textContent = bestWinStreak;
+    document.getElementById('best-loss-streak').textContent = bestLossStreak;
 }
 
 // Display buddy-specific stats when filtering by a buddy
@@ -4529,6 +4627,39 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+// Orientation lock helpers
+function lockPortrait() {
+    try {
+        if (screen.orientation && screen.orientation.lock) {
+            screen.orientation.lock('portrait').catch(() => {});
+        }
+    } catch (e) {}
+}
+
+function unlockOrientation() {
+    try {
+        if (screen.orientation && screen.orientation.unlock) {
+            screen.orientation.unlock();
+        }
+    } catch (e) {}
+}
+
+function lockCurrentOrientation() {
+    try {
+        if (screen.orientation && screen.orientation.lock) {
+            const current = screen.orientation.type; // e.g. "landscape-primary"
+            screen.orientation.lock(current).catch(() => {});
+        }
+    } catch (e) {}
+}
+
+// Lock to portrait on non-life-counter tabs
+document.querySelectorAll('.sidebar-nav-item:not([data-tab="life-counter"])').forEach(navItem => {
+    navItem.addEventListener('click', () => {
+        lockPortrait();
+    });
+});
+
 // Initialize life counter when tab is shown and enter fullscreen
 document.querySelector('.sidebar-nav-item[data-tab="life-counter"]')?.addEventListener('click', () => {
     if (!lifeCounterState.initialized) {
@@ -4536,11 +4667,14 @@ document.querySelector('.sidebar-nav-item[data-tab="life-counter"]')?.addEventLi
     }
     // Enter fullscreen mode
     document.body.classList.add('life-counter-fullscreen');
+    // Lock to current orientation so it doesn't spin when phone is on the table
+    lockCurrentOrientation();
 });
 
 // Exit life counter fullscreen mode
 function exitLifCounterFullscreen() {
     document.body.classList.remove('life-counter-fullscreen');
+    lockPortrait();
     // Switch to My Decks tab
     document.querySelectorAll('.sidebar-nav-item').forEach(t => t.classList.remove('active'));
     document.querySelector('.sidebar-nav-item[data-tab="my-decks"]').classList.add('active');
@@ -4562,4 +4696,5 @@ document.getElementById('life-counter-exit-fullscreen-btn')?.addEventListener('c
 });
 
 // Initialize app
+lockPortrait();
 init();

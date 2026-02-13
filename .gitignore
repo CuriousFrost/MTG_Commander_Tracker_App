@@ -21,3 +21,6 @@ Thumbs.db
 
 # TypeScript
 *.tsbuildinfo
+
+# Firebase cache
+landing-page/.firebase/

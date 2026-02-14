@@ -13,6 +13,10 @@ export interface OverviewStats {
   longestLossStreak: number;
   mostPlayedDeck: string | null;
   avgGamesPerMonth: number;
+  nemesisCommander: string | null;
+  nemesisRecord: string | null;
+  mostFacedOpponentColor: string | null;
+  mostFacedOpponentColorCount: number;
 }
 
 export function computeOverviewStats(
@@ -30,6 +34,10 @@ export function computeOverviewStats(
       longestLossStreak: 0,
       mostPlayedDeck: null,
       avgGamesPerMonth: 0,
+      nemesisCommander: null,
+      nemesisRecord: null,
+      mostFacedOpponentColor: null,
+      mostFacedOpponentColorCount: 0,
     };
   }
 
@@ -93,6 +101,9 @@ export function computeOverviewStats(
       ? Math.round((totalGames / months.size) * 10) / 10
       : 0;
 
+  const nemesis = computeNemesisCommander(games);
+  const opponentColor = computeMostFacedOpponentColor(games);
+
   return {
     totalGames,
     wins,
@@ -103,7 +114,89 @@ export function computeOverviewStats(
     longestLossStreak,
     mostPlayedDeck,
     avgGamesPerMonth,
+    nemesisCommander: nemesis?.commanderName ?? null,
+    nemesisRecord: nemesis
+      ? `${nemesis.winsAgainst}W-${nemesis.lossesAgainst}L (${nemesis.winRate}%)`
+      : null,
+    mostFacedOpponentColor: opponentColor.color,
+    mostFacedOpponentColorCount: opponentColor.count,
   };
+}
+
+interface NemesisCommanderSummary {
+  commanderName: string;
+  winsAgainst: number;
+  lossesAgainst: number;
+  winRate: number;
+}
+
+function computeNemesisCommander(games: Game[]): NemesisCommanderSummary | null {
+  const faced = computeMostFacedCommanders(games);
+  if (faced.length === 0) return null;
+
+  const MIN_SAMPLE = 2;
+  const sampled = faced.filter((entry) => entry.timesFaced >= MIN_SAMPLE);
+  const pool = sampled.length > 0 ? sampled : faced;
+
+  const sorted = [...pool].sort((a, b) => {
+    const aLosses = a.timesFaced - a.winsAgainst;
+    const bLosses = b.timesFaced - b.winsAgainst;
+    return (
+      bLosses - aLosses ||
+      a.winRate - b.winRate ||
+      b.timesFaced - a.timesFaced ||
+      a.commanderName.localeCompare(b.commanderName)
+    );
+  });
+
+  const top = sorted[0];
+  const lossesAgainst = top.timesFaced - top.winsAgainst;
+  if (lossesAgainst <= 0) return null;
+
+  return {
+    commanderName: top.commanderName,
+    winsAgainst: top.winsAgainst,
+    lossesAgainst,
+    winRate: top.winRate,
+  };
+}
+
+function computeMostFacedOpponentColor(games: Game[]): {
+  color: string | null;
+  count: number;
+} {
+  const counts = new Map<string, number>();
+
+  for (const game of games) {
+    let capturedOpponentColor = false;
+
+    for (const opp of game.opponents) {
+      if (!opp.colorIdentity || opp.colorIdentity.length === 0) continue;
+      const ci = normalizeColorIdentity(opp.colorIdentity.join(""));
+      counts.set(ci, (counts.get(ci) ?? 0) + 1);
+      capturedOpponentColor = true;
+    }
+
+    // Legacy fallback: if opponent colors are missing, infer one from the winner on a loss.
+    if (!capturedOpponentColor && !game.won) {
+      const winnerColor = normalizeColorIdentity(game.winnerColorIdentity);
+      counts.set(winnerColor, (counts.get(winnerColor) ?? 0) + 1);
+    }
+  }
+
+  let color: string | null = null;
+  let count = 0;
+  for (const [candidate, candidateCount] of counts) {
+    if (
+      candidateCount > count ||
+      (candidateCount === count && color !== null && candidate < color)
+    ) {
+      color = candidate;
+      count = candidateCount;
+    }
+  }
+
+  return { color, count };
 }
 
 // ─── Lifetime GP (year-over-year monthly games) ─────────────────────
@@ -213,6 +306,35 @@ export function computeMonthlyStats(games: Game[]): MonthlyStat[] {
       const label = `${MONTH_NAMES[parseInt(monthNum, 10) - 1]} '${year.slice(2)}`;
       return { month: label, wins, losses };
     });
+}
+
+export interface RecentResultPoint {
+  game: number;
+  result: number;
+  won: boolean;
+  outcome: "W" | "L";
+  date: string;
+  deckName: string;
+}
+
+export function computeRecentResults(
+  games: Game[],
+  limit = 20,
+): RecentResultPoint[] {
+  if (games.length === 0) return [];
+
+  const recent = [...games]
+    .sort((a, b) => a.date.localeCompare(b.date) || a.id - b.id)
+    .slice(-limit);
+
+  return recent.map((game, index) => ({
+    game: index + 1,
+    result: 1,
+    won: game.won,
+    outcome: game.won ? "W" : "L",
+    date: game.date,
+    deckName: game.myDeck.name,
+  }));
 }
 
 // ─── Color Identity Stats ───────────────────────────────────────────

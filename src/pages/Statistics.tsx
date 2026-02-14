@@ -18,6 +18,7 @@ import {
   computeOverviewStats,
   computeDeckStats,
   computeMonthlyStats,
+  computeRecentResults,
   computeColorStats,
   computeMostFacedCommanders,
   computeBuddyStats,
@@ -26,6 +27,7 @@ import { OverviewCards } from "@/components/statistics/OverviewCards";
 import { DeckWinRateChart } from "@/components/statistics/DeckWinRateChart";
 import { GamesOverTimeChart } from "@/components/statistics/GamesOverTimeChart";
 import { ColorBreakdownChart } from "@/components/statistics/ColorBreakdownChart";
+import { LastTwentyResultsChart } from "@/components/statistics/LastTwentyResultsChart";
 import { BuddyBreakdown } from "@/components/statistics/BuddyBreakdown";
 import { MostFacedCommanders } from "@/components/statistics/MostFacedCommanders";
 
@@ -57,11 +59,14 @@ export default function Statistics() {
     return Array.from(years).sort().reverse();
   }, [games]);
 
-  // All opponent player names appearing in games (for buddy filter)
+  // Opponent player names for buddy filter (new-format only).
+  // Legacy games may store commander names in `opp.name`, so only include
+  // rows that also have `opp.commander` (player + commander are separate).
   const opponentNames = useMemo(() => {
     const names = new Set<string>();
     for (const g of games) {
       for (const opp of g.opponents) {
+        if (!opp.commander) continue;
         if (opp.name?.trim()) names.add(opp.name.trim());
       }
     }
@@ -142,6 +147,7 @@ export default function Statistics() {
   const overview = computeOverviewStats(filteredGames, decks);
   const deckStats = computeDeckStats(filteredGames);
   const monthlyStats = computeMonthlyStats(filteredGames);
+  const recentResults = computeRecentResults(filteredGames, 20);
   const colorStats = computeColorStats(filteredGames);
   const facedCommanders = computeMostFacedCommanders(filteredGames);
   const buddyStats = computeBuddyStats(filteredGames);
@@ -292,7 +298,7 @@ export default function Statistics() {
       {loading ? (
         <div className="space-y-6">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {Array.from({ length: 8 }).map((_, i) => (
+            {Array.from({ length: 10 }).map((_, i) => (
               <Skeleton key={i} className="h-24 rounded-xl" />
             ))}
           </div>
@@ -321,11 +327,12 @@ export default function Statistics() {
             <GamesOverTimeChart data={monthlyStats} />
           </div>
 
-          <div className="grid gap-6 lg:grid-cols-2">
+          <div className="grid gap-6 lg:grid-cols-3">
             <ColorBreakdownChart
               data={colorStats}
               totalGames={overview.totalGames}
             />
+            <LastTwentyResultsChart data={recentResults} />
             <BuddyBreakdown data={buddyStats} />
           </div>
 

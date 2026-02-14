@@ -55,7 +55,7 @@ export function MostFacedCommanders({ data }: MostFacedCommandersProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Most Faced Commanders</CardTitle>
+          <CardTitle>Common Enemies</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground text-sm">
@@ -69,7 +69,7 @@ export function MostFacedCommanders({ data }: MostFacedCommandersProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Most Faced Commanders</CardTitle>
+        <CardTitle>Common Enemies</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">

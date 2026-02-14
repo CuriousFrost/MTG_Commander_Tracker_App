@@ -8,6 +8,7 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useIsMobile } from "@/hooks/use-mobile";
 import type { MonthlyStat } from "@/lib/stats";
 
 interface GamesOverTimeChartProps {
@@ -20,11 +21,13 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 export function GamesOverTimeChart({ data }: GamesOverTimeChartProps) {
+  const isMobile = useIsMobile();
+
   if (data.length === 0) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Games Over Time</CardTitle>
+          <CardTitle>Annual Snapshot</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground text-sm">
@@ -38,13 +41,21 @@ export function GamesOverTimeChart({ data }: GamesOverTimeChartProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Games Over Time</CardTitle>
+        <CardTitle>Annual Snapshot</CardTitle>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig} className="min-h-[250px] w-full">
+        <ChartContainer
+          config={chartConfig}
+          className="min-h-[250px] w-full"
+        >
           <BarChart data={data}>
             <CartesianGrid vertical={false} />
-            <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+            <XAxis
+              dataKey="month"
+              tick={{ fontSize: 12 }}
+              minTickGap={isMobile ? 20 : 8}
+              interval={isMobile ? "preserveStartEnd" : 0}
+            />
             <YAxis allowDecimals={false} />
             <ChartTooltip content={<ChartTooltipContent />} />
             <ChartLegend content={<ChartLegendContent />} />

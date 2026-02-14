@@ -24,7 +24,7 @@ export function useIsMobile() {
 }
 
 export function useIsLandscapeMobile() {
-  const isMobile = useIsMobile()
   const isLandscape = useMediaQuery("(orientation: landscape)")
-  return isMobile && isLandscape
+  const shortViewport = useMediaQuery("(max-height: 860px)")
+  return isLandscape && shortViewport
 }

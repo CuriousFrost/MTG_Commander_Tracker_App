@@ -19,13 +19,17 @@ type ThemeOption = {
 };
 
 const themeOptions: ThemeOption[] = [
-  { value: "default-dark", label: "Default Dark", swatch: ["#0f172a", "#1e293b"] },
-  { value: "midnight", label: "Midnight", swatch: ["#0a0f2c", "#1e1b4b"] },
-  { value: "forest", label: "Forest", swatch: ["#0f2418", "#1f3b2a"] },
-  { value: "blood-moon", label: "Blood Moon", swatch: ["#2b0f12", "#4c1d1d"] },
-  { value: "azorius", label: "Azorius", swatch: ["#eef3ff", "#c7d7ff"] },
-  { value: "dimir", label: "Dimir", swatch: ["#140f1f", "#2a1b3d"] },
-  { value: "selesnya", label: "Selesnya", swatch: ["#f4f1e6", "#cbe6c4"] },
+  { value: "default-dark", label: "Dark", swatch: ["#0f172a", "#1e293b"] },
+  { value: "light", label: "Light", swatch: ["#f8fafc", "#e2e8f0"] },
+  { value: "cerulean-sand", label: "Cerulean Sand", swatch: ["#0B2D72", "#0AC4E0"] },
+  { value: "ember-violet", label: "Ember Violet", swatch: ["#F25912", "#5C3E94"] },
+  { value: "lagoon-royal", label: "Lagoon Royal", swatch: ["#78B9B5", "#065084"] },
+  { value: "crimson-noir", label: "Crimson Noir", swatch: ["#F7374F", "#2C2C2C"] },
+  { value: "mosswood", label: "Mosswood", swatch: ["#1F7D53", "#18230F"] },
+  { value: "ultramarine-pop", label: "Ultramarine Pop", swatch: ["#402E7A", "#3DC2EC"] },
+  { value: "rose-plum", label: "Rose Plum", swatch: ["#E19898", "#4D3C77"] },
+  { value: "pastel-garden", label: "Pastel Garden", swatch: ["#F7CFD8", "#8E7DBE"] },
+  { value: "sunburst-red", label: "Sunburst Red", swatch: ["#FFD41D", "#FF4646"] },
 ];
 
 function ThemeSwatch({ colors }: { colors: [string, string] }) {

@@ -88,7 +88,7 @@ export default function Dashboard() {
             A glimpse at your EDH journey
           </p>
         </div>
-        <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <Skeleton key={i} className="h-20 rounded-xl" />
           ))}
@@ -126,7 +126,7 @@ export default function Dashboard() {
         {/* Left column */}
         <div className="space-y-4">
           {/* Stat Cards Row */}
-          <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <Card className="gap-0 py-3">
               <CardHeader className="px-4 pb-1">
                 <CardTitle className="text-muted-foreground text-xs font-medium">

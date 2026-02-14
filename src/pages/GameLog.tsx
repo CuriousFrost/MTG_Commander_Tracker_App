@@ -1,7 +1,11 @@
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDecks } from "@/hooks/use-decks";
 import { useGames } from "@/hooks/use-games";
+import { usePodBuddies } from "@/hooks/use-pod-buddies";
+import { useUserProfile } from "@/hooks/use-user-profile";
+import { useFriends } from "@/hooks/use-friends";
 import { GameHistory } from "@/components/games/GameHistory";
 
 export default function GameLog() {
@@ -13,9 +17,19 @@ export default function GameLog() {
     editGame,
     deleteGame,
   } = useGames();
+  const { podBuddies } = usePodBuddies();
+  const { profile } = useUserProfile();
+  const { friends } = useFriends(
+    profile?.friendId ?? null,
+    profile?.username ?? "",
+  );
 
   const loading = decksLoading || gamesLoading;
   const error = decksError || gamesError;
+  const onlineFriendNames = useMemo(
+    () => friends.map((friend) => friend.username),
+    [friends],
+  );
 
   return (
     <div className="space-y-6">
@@ -51,6 +65,8 @@ export default function GameLog() {
         <GameHistory
           games={games}
           decks={decks}
+          podBuddies={podBuddies}
+          onlineFriends={onlineFriendNames}
           onEditGame={editGame}
           onDeleteGame={deleteGame}
         />

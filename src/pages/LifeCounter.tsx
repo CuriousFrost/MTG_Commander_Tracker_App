@@ -271,9 +271,9 @@ export default function LifeCounter() {
         </div>
       </div>
 
-      {/* 12rem accounts for: header (3.5rem) + controls (~4.5rem) + page padding + spacing */}
+      {/* Compact landscape mode keeps all player panels visible at once. */}
       {isCompactLandscape ? (
-        <div className="h-[calc(100svh-12rem)] min-h-[220px]">
+        <div className="h-[calc(100svh-9.5rem)] min-h-[220px]">
           <div className={compactGridClassName}>
             {players.map((player, index) => {
               const eliminated = isEliminated(index);
@@ -299,44 +299,30 @@ export default function LifeCounter() {
                   <Input
                     value={player.name}
                     onChange={(event) => updatePlayerName(index, event.target.value)}
-                    className="h-8 text-center text-sm font-semibold"
+                    className="h-7 text-center text-xs font-semibold"
                   />
 
-                  <div className="text-4xl font-bold leading-none">{player.life}</div>
+                  <div className="text-3xl font-bold leading-none">{player.life}</div>
 
                   <div className="flex items-center gap-1">
                     <Button
-                      variant="outline"
-                      className="h-8 min-w-0 px-2 text-xs"
-                      onClick={() => adjustLife(index, -5)}
-                    >
-                      -5
-                    </Button>
-                    <Button
                       variant="secondary"
-                      className="h-8 min-w-0 px-2 text-sm"
+                      className="h-7 min-w-0 px-2 text-xs"
                       onClick={() => adjustLife(index, -1)}
                     >
                       -1
                     </Button>
                     <Button
-                      className="h-8 min-w-0 px-2 text-sm"
+                      className="h-7 min-w-0 px-2 text-xs"
                       onClick={() => adjustLife(index, 1)}
                     >
                       +1
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="h-8 min-w-0 px-2 text-xs"
-                      onClick={() => adjustLife(index, 5)}
-                    >
-                      +5
                     </Button>
                   </div>
 
                   <Button
                     variant="outline"
-                    className="h-7 px-2 text-xs"
+                    className="h-6 px-2 text-[10px]"
                     onClick={() => setActiveCommanderDamagePlayer(index)}
                   >
                     DMG

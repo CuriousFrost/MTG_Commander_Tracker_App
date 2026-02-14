@@ -4,9 +4,13 @@ import { searchCommanderNames } from "@/lib/scryfall";
 
 interface CommanderSearchProps {
   onSelect: (name: string) => void;
+  initialQuery?: string;
 }
 
-export function CommanderSearch({ onSelect }: CommanderSearchProps) {
+export function CommanderSearch({
+  onSelect,
+  initialQuery = "",
+}: CommanderSearchProps) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
@@ -72,6 +76,13 @@ export function CommanderSearch({ onSelect }: CommanderSearchProps) {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    setQuery(initialQuery);
+    setResults([]);
+    setOpen(false);
+    setActiveIndex(-1);
+  }, [initialQuery]);
 
   return (
     <div ref={containerRef} className="relative">

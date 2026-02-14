@@ -7,6 +7,7 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useIsMobile } from "@/hooks/use-mobile";
 import type { ColorStat } from "@/lib/stats";
 import {
   formatColorIdentityLabel,
@@ -27,6 +28,8 @@ export function ColorBreakdownChart({
   data,
   totalGames,
 }: ColorBreakdownChartProps) {
+  const isMobile = useIsMobile();
+
   const chartData = useMemo(
     () =>
       data.slice(0, 10).map((d) => ({
@@ -94,7 +97,12 @@ export function ColorBreakdownChart({
             <YAxis
               type="category"
               dataKey="label"
-              width={140}
+              width={isMobile ? 92 : 140}
+              tickFormatter={(value: string) =>
+                isMobile && value.length > 14
+                  ? `${value.slice(0, 13)}...`
+                  : value
+              }
               tick={{ fontSize: 12 }}
             />
             <ChartTooltip

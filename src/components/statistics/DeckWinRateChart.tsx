@@ -52,7 +52,7 @@ export function DeckWinRateChart({ data }: DeckWinRateChartProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Win Rate by Deck</CardTitle>
+          <CardTitle>Deck Stats</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground text-sm">
@@ -76,7 +76,7 @@ export function DeckWinRateChart({ data }: DeckWinRateChartProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Win Rate by Deck</CardTitle>
+        <CardTitle>Deck Stats</CardTitle>
       </CardHeader>
       <CardContent className="px-4 pb-4 sm:px-0 sm:pb-0">
         <div className="mb-3 flex flex-wrap gap-1 sm:hidden">
@@ -116,7 +116,7 @@ export function DeckWinRateChart({ data }: DeckWinRateChartProps) {
                 key={deck.deckName}
                 className={`rounded-lg border p-3 ${isZero ? "opacity-40" : ""}`}
               >
-                <p className="text-sm font-medium">{deck.deckName}</p>
+                <p className="text-sm font-medium break-words">{deck.deckName}</p>
                 <div className="mt-2 grid grid-cols-4 gap-2 text-xs">
                   <div>
                     <p className="text-muted-foreground">GP</p>

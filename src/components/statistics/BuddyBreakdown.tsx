@@ -110,7 +110,7 @@ export function BuddyBreakdown({ data }: BuddyBreakdownProps) {
         <div className="space-y-2 sm:hidden">
           {sorted.map((buddy) => (
             <div key={buddy.buddyName} className="rounded-lg border p-3">
-              <p className="text-sm font-medium">{buddy.buddyName}</p>
+              <p className="text-sm font-medium break-words">{buddy.buddyName}</p>
               <div className="mt-2 grid grid-cols-4 gap-2 text-xs">
                 <div>
                   <p className="text-muted-foreground">GP</p>
@@ -136,35 +136,35 @@ export function BuddyBreakdown({ data }: BuddyBreakdownProps) {
         </div>
 
         <div className="hidden sm:block">
-          <Table>
+          <Table className="table-fixed">
             <TableHeader>
               <TableRow className="hover:bg-transparent">
                 <TableHead
-                  className="cursor-pointer select-none pl-6 text-xs"
+                  className="w-[48%] cursor-pointer select-none pl-4 text-xs"
                   onClick={() => toggleSort("buddyName")}
                 >
                   Buddy <SortIcon col="buddyName" />
                 </TableHead>
                 <TableHead
-                  className="cursor-pointer select-none text-center text-xs w-12"
+                  className="w-[13%] cursor-pointer select-none text-center text-xs"
                   onClick={() => toggleSort("total")}
                 >
                   GP <SortIcon col="total" />
                 </TableHead>
                 <TableHead
-                  className="cursor-pointer select-none text-center text-xs w-12"
+                  className="w-[13%] cursor-pointer select-none text-center text-xs"
                   onClick={() => toggleSort("wins")}
                 >
                   W <SortIcon col="wins" />
                 </TableHead>
                 <TableHead
-                  className="cursor-pointer select-none text-center text-xs w-12"
+                  className="w-[13%] cursor-pointer select-none text-center text-xs"
                   onClick={() => toggleSort("losses")}
                 >
                   L <SortIcon col="losses" />
                 </TableHead>
                 <TableHead
-                  className="cursor-pointer select-none text-right text-xs pr-6 w-16"
+                  className="w-[13%] cursor-pointer select-none text-right text-xs pr-3"
                   onClick={() => toggleSort("winRate")}
                 >
                   Win% <SortIcon col="winRate" />
@@ -177,7 +177,7 @@ export function BuddyBreakdown({ data }: BuddyBreakdownProps) {
                   key={buddy.buddyName}
                   className={i % 2 === 0 ? "bg-muted/30" : ""}
                 >
-                  <TableCell className="pl-6 py-2 text-sm font-medium truncate max-w-[160px]">
+                  <TableCell className="pl-4 py-2 text-sm font-medium truncate">
                     {buddy.buddyName}
                   </TableCell>
                   <TableCell className="text-center py-2 text-sm tabular-nums">
@@ -189,7 +189,7 @@ export function BuddyBreakdown({ data }: BuddyBreakdownProps) {
                   <TableCell className="text-center py-2 text-sm tabular-nums">
                     {buddy.losses}
                   </TableCell>
-                  <TableCell className="text-right pr-6 py-2 text-sm font-semibold tabular-nums">
+                  <TableCell className="text-right pr-3 py-2 text-sm font-semibold tabular-nums">
                     {buddy.winRate.toFixed(1)}%
                   </TableCell>
                 </TableRow>

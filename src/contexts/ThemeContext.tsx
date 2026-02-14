@@ -2,12 +2,16 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 export type ThemeName =
   | "default-dark"
-  | "midnight"
-  | "forest"
-  | "blood-moon"
-  | "azorius"
-  | "dimir"
-  | "selesnya";
+  | "light"
+  | "cerulean-sand"
+  | "ember-violet"
+  | "lagoon-royal"
+  | "crimson-noir"
+  | "mosswood"
+  | "ultramarine-pop"
+  | "rose-plum"
+  | "pastel-garden"
+  | "sunburst-red";
 
 type ThemeContextValue = {
   theme: ThemeName;
@@ -18,20 +22,28 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 const allThemes = new Set<ThemeName>([
   "default-dark",
-  "midnight",
-  "forest",
-  "blood-moon",
-  "azorius",
-  "dimir",
-  "selesnya",
+  "light",
+  "cerulean-sand",
+  "ember-violet",
+  "lagoon-royal",
+  "crimson-noir",
+  "mosswood",
+  "ultramarine-pop",
+  "rose-plum",
+  "pastel-garden",
+  "sunburst-red",
 ]);
 
 const darkThemes = new Set<ThemeName>([
   "default-dark",
-  "midnight",
-  "forest",
-  "blood-moon",
-  "dimir",
+  "cerulean-sand",
+  "ember-violet",
+  "lagoon-royal",
+  "crimson-noir",
+  "mosswood",
+  "ultramarine-pop",
+  "rose-plum",
+  "sunburst-red",
 ]);
 
 const STORAGE_KEY = "seasons-past-theme";

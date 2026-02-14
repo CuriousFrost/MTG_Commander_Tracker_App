@@ -7,6 +7,7 @@ import {
   Pencil,
   Plus,
   Trash2,
+  Users,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -47,6 +48,8 @@ import {
   emptyOpponentEntry,
   type OpponentEntry,
 } from "@/components/games/OpponentRow";
+import { AddBuddyDialog } from "@/components/games/AddBuddyDialog";
+import { normalizeColorIdentity } from "@/lib/mtg-utils";
 import { fetchCommanderByName } from "@/lib/scryfall";
 import { buildColorString } from "@/lib/utils";
 import type { Commander, Deck, Game, ManaColor } from "@/types";
@@ -64,6 +67,8 @@ type ResultFilter = "all" | "win" | "loss";
 interface GameHistoryProps {
   games: Game[];
   decks: Deck[];
+  podBuddies: string[];
+  onlineFriends: string[];
   onEditGame: (game: Game) => void;
   onDeleteGame: (gameId: number) => void;
 }
@@ -89,9 +94,37 @@ function opponentToEntry(opp: {
   };
 }
 
+function inferWinningCommander(game: Game): string | null {
+  if (game.won) return null;
+
+  const explicit = game.winningCommander?.trim();
+  if (explicit) return explicit;
+
+  const candidates = game.opponents
+    .map((opp) => (opp.commander ?? opp.name)?.trim())
+    .filter((name): name is string => !!name);
+
+  if (candidates.length === 1) return candidates[0];
+
+  const winnerColor = normalizeColorIdentity(game.winnerColorIdentity);
+  const colorMatches = game.opponents.filter((opp) => {
+    if (!opp.colorIdentity || opp.colorIdentity.length === 0) return false;
+    const ci = normalizeColorIdentity(opp.colorIdentity.join(""));
+    return ci === winnerColor;
+  });
+
+  if (colorMatches.length === 1) {
+    return (colorMatches[0].commander ?? colorMatches[0].name).trim();
+  }
+
+  return null;
+}
+
 export function GameHistory({
   games,
   decks,
+  podBuddies,
+  onlineFriends,
   onEditGame,
   onDeleteGame,
 }: GameHistoryProps) {
@@ -115,6 +148,7 @@ export function GameHistory({
   const [editWinningCommanderData, setEditWinningCommanderData] =
     useState<Commander | null>(null);
   const [fetchingCommander, setFetchingCommander] = useState(false);
+  const [editBuddyDialogOpen, setEditBuddyDialogOpen] = useState(false);
 
   const [gameToDelete, setGameToDelete] = useState<Game | null>(null);
 
@@ -163,6 +197,9 @@ export function GameHistory({
     const set = new Set<string>();
     games.forEach((game) => {
       game.opponents.forEach((opp) => {
+        // Legacy games may store commander names in `opp.name`.
+        // Only treat as a buddy when player + commander are distinct fields.
+        if (!opp.commander) return;
         const trimmed = opp.name.trim();
         if (trimmed) set.add(trimmed);
       });
@@ -236,6 +273,7 @@ export function GameHistory({
   }
 
   function openEdit(game: Game) {
+    const inferredWinner = inferWinningCommander(game);
     setEditingGame(game);
     setEditDate(game.date);
     setEditDeckId(String(game.myDeck.id));
@@ -245,7 +283,7 @@ export function GameHistory({
         : [emptyOpponentEntry()],
     );
     setEditWon(game.won);
-    setEditWinningCommanderName(game.winningCommander ?? null);
+    setEditWinningCommanderName(inferredWinner);
     setEditWinningCommanderData(null);
   }
 
@@ -261,6 +299,18 @@ export function GameHistory({
     setEditOpponents((prev) =>
       prev.map((opp, i) => (i === index ? entry : opp)),
     );
+  }
+
+  function fillEditOpponentName(name: string) {
+    setEditOpponents((prev) => {
+      const emptyIdx = prev.findIndex((opp) => opp.name.trim() === "");
+      if (emptyIdx >= 0) {
+        return prev.map((opp, i) =>
+          i === emptyIdx ? { ...opp, name } : opp,
+        );
+      }
+      return [...prev, { ...emptyOpponentEntry(), name }];
+    });
   }
 
   async function handleEditCommanderSelect(name: string) {
@@ -337,7 +387,20 @@ export function GameHistory({
     filledEditOpponents.length >= 1 &&
     (editWon || editWinningCommanderName !== null);
 
-  function OpponentsList({ opponents }: { opponents: Game["opponents"] }) {
+  function OpponentsList({
+    opponents,
+    won,
+    winningCommander,
+    game,
+  }: {
+    opponents: Game["opponents"];
+    won: boolean;
+    winningCommander?: string;
+    game: Game;
+  }) {
+    const inferredWinner = winningCommander?.trim() || inferWinningCommander(game);
+    const winningName = inferredWinner?.toLowerCase();
+
     return (
       <div className="space-y-1">
         {opponents.map((opp, i) => (
@@ -345,7 +408,22 @@ export function GameHistory({
             {opp.colorIdentity && opp.colorIdentity.length > 0 && (
               <ManaSymbols colorIdentity={opp.colorIdentity} size="sm" />
             )}
-            <span className="text-sm">{opp.commander ?? opp.name}</span>
+            {(() => {
+              const commanderName = (opp.commander ?? opp.name).trim();
+              const isWinner =
+                !won &&
+                !!winningName &&
+                commanderName.toLowerCase() === winningName;
+              return (
+                <span
+                  className={`text-sm ${
+                    isWinner ? "font-semibold text-amber-400" : ""
+                  }`}
+                >
+                  {commanderName}
+                </span>
+              );
+            })()}
           </div>
         ))}
       </div>
@@ -515,7 +593,12 @@ export function GameHistory({
 
               <div className="space-y-1">
                 <p className="text-muted-foreground text-xs">Opponents</p>
-                <OpponentsList opponents={game.opponents} />
+                <OpponentsList
+                  opponents={game.opponents}
+                  won={game.won}
+                  winningCommander={game.winningCommander}
+                  game={game}
+                />
               </div>
 
               <div className="flex items-center justify-between text-sm">
@@ -583,8 +666,11 @@ export function GameHistory({
                 </TableCell>
               </TableRow>
             ) : (
-              sortedGames.map((game) => (
-                <TableRow key={game.id}>
+              sortedGames.map((game, i) => (
+                <TableRow
+                  key={game.id}
+                  className={i % 2 === 0 ? "bg-muted/20" : ""}
+                >
                   <TableCell className="whitespace-nowrap">
                     {formatDate(game.date)}
                   </TableCell>
@@ -605,7 +691,12 @@ export function GameHistory({
                   </TableCell>
 
                   <TableCell>
-                    <OpponentsList opponents={game.opponents} />
+                    <OpponentsList
+                      opponents={game.opponents}
+                      won={game.won}
+                      winningCommander={game.winningCommander}
+                      game={game}
+                    />
                   </TableCell>
 
                   <TableCell>{game.totalPlayers}</TableCell>
@@ -650,7 +741,10 @@ export function GameHistory({
       <Dialog
         open={!!editingGame}
         onOpenChange={(open) => {
-          if (!open) setEditingGame(null);
+          if (!open) {
+            setEditingGame(null);
+            setEditBuddyDialogOpen(false);
+          }
         }}
       >
         <DialogContent className="sm:max-w-2xl">
@@ -730,6 +824,15 @@ export function GameHistory({
                 <Plus className="mr-1 h-4 w-4" />
                 Add Opponent
               </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setEditBuddyDialogOpen(true)}
+              >
+                <Users className="mr-1 h-4 w-4" />
+                Add Buddy
+              </Button>
             </div>
 
             <label className="flex items-center gap-2 text-sm">
@@ -754,6 +857,7 @@ export function GameHistory({
                   Winning Commander
                 </label>
                 <CommanderSearch
+                  initialQuery={editWinningCommanderName ?? ""}
                   onSelect={handleEditCommanderSelect}
                 />
                 {fetchingCommander && (
@@ -797,6 +901,14 @@ export function GameHistory({
           </form>
         </DialogContent>
       </Dialog>
+
+      <AddBuddyDialog
+        open={editBuddyDialogOpen}
+        onClose={() => setEditBuddyDialogOpen(false)}
+        podBuddies={podBuddies}
+        onlineFriends={onlineFriends}
+        onSelect={fillEditOpponentName}
+      />
 
       {/* Delete Dialog */}
       <Dialog

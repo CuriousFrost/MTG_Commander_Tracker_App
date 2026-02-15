@@ -1,230 +1,284 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Seasons Past - Track your EDH journey through the seasons. Log games, manage decks, analyze stats, and stack up with your pod.">
-    <meta name="keywords" content="MTG, Magic: The Gathering, Commander, EDH, deck tracker, game tracker, statistics">
-    <meta name="author" content="Seasons Past">
-    <meta property="og:title" content="Seasons Past - MTG Commander Tracker">
-    <meta property="og:description" content="Track your EDH journey through the seasons. Log games, manage decks, analyze stats, and stack up with your pod.">
-    <meta property="og:type" content="website">
-    <meta property="og:image" content="assets/header.svg">
-    <title>Seasons Past - MTG Commander Tracker</title>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Seasons Past - Track your EDH journey through the seasons. Log games, manage decks, analyze stats, and stack up with your pod." />
+  <meta name="keywords" content="MTG, Magic: The Gathering, Commander, EDH, deck tracker, game tracker, statistics" />
+  <meta name="author" content="Seasons Past" />
+  <meta property="og:title" content="Seasons Past - MTG Commander Tracker" />
+  <meta property="og:description" content="Track your EDH journey through the seasons. Log games, manage decks, analyze stats, and stack up with your pod." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="assets/header.svg" />
+  <title>Seasons Past - MTG Commander Tracker</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['Cinzel', 'serif'],
+            body: ['Manrope', 'sans-serif'],
+          },
+          keyframes: {
+            floaty: {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%': { transform: 'translateY(-7px)' },
+            }
+          },
+          animation: {
+            floaty: 'floaty 7s ease-in-out infinite'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    :root {
+      --bg: #f9f3e6;
+      --bg-soft: #ecdfc7;
+      --paper: #fffaf1;
+      --paper-soft: #f7efdf;
+      --ink: #1f1a13;
+      --muted: #665946;
+      --accent: #8a5b2d;
+      --accent-strong: #6e4120;
+      --ring: rgba(138, 91, 45, 0.28);
+      --hero-glow: rgba(138, 91, 45, 0.2);
+    }
+
+    body[data-mode="dark"] {
+      --bg: #120d0b;
+      --bg-soft: #1f1611;
+      --paper: #1d1713;
+      --paper-soft: #261d17;
+      --ink: #f6ebde;
+      --muted: #c8b39a;
+      --accent: #f2b66b;
+      --accent-strong: #f8c789;
+      --ring: rgba(242, 182, 107, 0.35);
+      --hero-glow: rgba(242, 182, 107, 0.2);
+    }
+
+    body[data-accent="azure"] {
+      --accent: #4767b7;
+      --accent-strong: #2f4b95;
+      --ring: rgba(71, 103, 183, 0.32);
+      --hero-glow: rgba(71, 103, 183, 0.2);
+    }
+
+    body[data-mode="dark"][data-accent="azure"] {
+      --accent: #8cb0ff;
+      --accent-strong: #a8c3ff;
+      --ring: rgba(140, 176, 255, 0.32);
+      --hero-glow: rgba(140, 176, 255, 0.2);
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0.07;
+      background-image: radial-gradient(circle at 10% 20%, #000 0.5px, transparent 0.55px);
+      background-size: 5px 5px;
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 560ms ease, transform 560ms ease;
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .mode-btn.is-active,
+    .accent-btn.is-active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    body[data-mode="dark"] .mode-btn.is-active,
+    body[data-mode="dark"] .accent-btn.is-active {
+      color: #111;
+    }
+  </style>
 </head>
-<body>
-    <!-- Animated Background -->
-    <div class="bg-particles" id="particles"></div>
+<body class="min-h-screen overflow-x-hidden bg-[var(--bg)] text-[var(--ink)] font-body" data-mode="light" data-accent="amber">
+  <div class="pointer-events-none fixed inset-0">
+    <div class="absolute inset-x-0 top-0 h-72 bg-[radial-gradient(ellipse_at_top,var(--hero-glow),transparent)]"></div>
+  </div>
 
-    <!-- Hero Section -->
-    <section class="hero" id="hero">
-        <div class="hero-content">
-            <div class="logo-container fade-in-up">
-                <img src="assets/header.svg" alt="Seasons Past Logo" class="logo">
-            </div>
-            <h1 class="hero-tagline fade-in-up delay-1">Track Your EDH Journey Through the Seasons</h1>
-            <p class="hero-subtitle fade-in-up delay-2">Log games, manage decks, analyze stats, and stack up with your pod</p>
-            <div class="cta-buttons fade-in-up delay-3">
-                <a href="https://app.seasonspast.app/" class="btn btn-primary" target="_blank" rel="noopener">
-                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <line x1="2" y1="12" x2="22" y2="12"></line>
-                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-                    </svg>
-                    Open Web App
-                </a>
-                <a href="#features" class="btn btn-outline">
-                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <polyline points="8 12 12 16 16 12"></polyline>
-                        <line x1="12" y1="8" x2="12" y2="16"></line>
-                    </svg>
-                    Learn More
-                </a>
-            </div>
+  <header class="relative z-20 mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-8 sm:px-10">
+    <a href="./" class="inline-flex items-center gap-3 rounded-full border border-[var(--ring)] bg-[var(--paper)] px-4 py-2 transition hover:border-[var(--accent)]">
+      <img src="assets/header.svg" alt="Seasons Past" class="h-7 w-auto sm:h-8" />
+    </a>
+
+    <div class="flex flex-wrap items-center gap-2 rounded-2xl border border-[var(--ring)] bg-[var(--paper)] p-2">
+      <div class="flex items-center gap-1 rounded-full border border-[var(--ring)] p-1">
+        <button class="mode-btn rounded-full border border-transparent px-3 py-1.5 text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]" data-set-mode="light">Light</button>
+        <button class="mode-btn rounded-full border border-transparent px-3 py-1.5 text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]" data-set-mode="dark">Dark</button>
+      </div>
+      <div class="flex items-center gap-1 rounded-full border border-[var(--ring)] p-1">
+        <button class="accent-btn rounded-full border border-transparent px-3 py-1.5 text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]" data-set-accent="amber">Amber</button>
+        <button class="accent-btn rounded-full border border-transparent px-3 py-1.5 text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]" data-set-accent="azure">Azure</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="relative z-10 mx-auto max-w-6xl px-6 pb-20 sm:px-10">
+    <section class="grid gap-8 border-y border-[var(--ring)] py-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
+      <div class="space-y-6 reveal" data-reveal>
+        <p class="text-xs font-bold uppercase tracking-[0.24em] text-[var(--accent)]">Seasons Past</p>
+        <h1 class="font-display text-4xl font-bold leading-tight sm:text-5xl lg:text-6xl">Keep the story-driven structure, sharpen the conversion path.</h1>
+        <p class="max-w-xl text-base text-[var(--muted)] sm:text-lg">Track each Commander season with a cleaner narrative flow: build your decks, log every game, and tune strategy using real matchup data.</p>
+        <div class="flex flex-wrap gap-3">
+          <a href="https://app.seasonspast.app/" target="_blank" rel="noopener" class="rounded-md bg-[var(--accent)] px-6 py-3 text-sm font-bold uppercase tracking-[0.14em] text-white transition hover:bg-[var(--accent-strong)]">Open App</a>
+          <a href="#chapters" class="rounded-md border border-[var(--ring)] bg-[var(--paper)] px-6 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-[var(--accent)] transition hover:border-[var(--accent)]">Explore Features</a>
         </div>
-        <div class="scroll-indicator fade-in delay-4">
-            <span>Scroll to explore</span>
-            <div class="scroll-arrow"></div>
+      </div>
+      <article class="reveal overflow-hidden rounded-3xl border border-[var(--ring)] bg-[var(--paper)] shadow-[0_20px_60px_-44px_rgba(0,0,0,0.42)]" data-reveal>
+        <div class="border-b border-[var(--ring)] p-4">
+          <p class="text-xs font-bold uppercase tracking-[0.2em] text-[var(--muted)]">Session Ledger Snapshot</p>
         </div>
+        <img src="assets/Game-History-View.png" alt="Game history" class="w-full" />
+      </article>
     </section>
 
-    <!-- Features Section -->
-    <section class="features" id="features">
-        <div class="container">
-            <h2 class="section-title">Powerful Features for all levels of EDH Players</h2>
-            <p class="section-subtitle">Seasons Past has everything you need to track and analyze each game of Commander you play</p>
-
-            <div class="features-grid">
-                <div class="feature-card" data-animate>
-                    <div class="feature-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-                            <line x1="8" y1="21" x2="16" y2="21"></line>
-                            <line x1="12" y1="17" x2="12" y2="21"></line>
-                        </svg>
-                    </div>
-                    <h3>Deck Management</h3>
-                    <p>Construct an unlimited Commander library with all of your favourite decks. Organize and tweak your decks with Moxfield and EDHREC built directly into the app.</p>
-                </div>
-
-                <div class="feature-card" data-animate>
-                    <div class="feature-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                            <polyline points="14 2 14 8 20 8"></polyline>
-                            <line x1="16" y1="13" x2="8" y2="13"></line>
-                            <line x1="16" y1="17" x2="8" y2="17"></line>
-                            <polyline points="10 9 9 9 8 9"></polyline>
-                        </svg>
-                    </div>
-                    <h3>Game Logging</h3>
-                    <p>Record wins, losses, and opponents. The app tracks all your games and keeps a detailed history of your Commander matches.</p>
-                </div>
-
-                <div class="feature-card" data-animate>
-                    <div class="feature-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <line x1="18" y1="20" x2="18" y2="10"></line>
-                            <line x1="12" y1="20" x2="12" y2="4"></line>
-                            <line x1="6" y1="20" x2="6" y2="14"></line>
-                        </svg>
-                    </div>
-                    <h3>Statistics</h3>
-                    <p>Win rates, streaks, color breakdowns, and more. Visualize your performance with real-time analytics.</p>
-                </div>
-
-                <div class="feature-card" data-animate>
-                    <div class="feature-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                        </svg>
-                    </div>
-                    <h3>Life Counter</h3>
-                    <p>EDH life-counter feature built right into the app for up to 6 players. Track life totals, commander damage, and poison counters without having to swtich apps.</p>
-                </div>
-
-                <div class="feature-card" data-animate>
-                    <div class="feature-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
-                        </svg>
-                    </div>
-                    <h3>Cloud Sync</h3>
-                    <p>Seasons Past Web App syncs your data across devices using Google Cloud. Your data is always backed up and accessible wherever you play.</p>
-                </div>
-
-                <div class="feature-card" data-animate>
-                    <div class="feature-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                            <circle cx="9" cy="7" r="4"></circle>
-                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                        </svg>
-                    </div>
-                    <h3>POD Buddies</h3>
-                    <p>Seasons Past Web App has a built in POD Buddies system. Add your friends and track your games together. See how you stack up!</p>
-                </div>
-            </div>
-        </div>
+    <section id="chapters" class="py-16">
+      <div class="mb-8 reveal" data-reveal>
+        <p class="text-xs font-bold uppercase tracking-[0.22em] text-[var(--accent)]">Narrative Flow</p>
+        <h2 class="mt-2 font-display text-4xl font-bold">Three chapter structure</h2>
+      </div>
+      <div class="grid gap-5 md:grid-cols-3">
+        <article class="reveal rounded-2xl border border-[var(--ring)] bg-[var(--paper)] p-6" data-reveal>
+          <p class="text-xs font-bold uppercase tracking-[0.2em] text-[var(--accent)]">Chapter 1</p>
+          <h3 class="mt-2 font-display text-2xl font-semibold">Assemble</h3>
+          <p class="mt-2 text-sm text-[var(--muted)]">Import decks, organize commanders, and define your pod-ready roster.</p>
+        </article>
+        <article class="reveal rounded-2xl border border-[var(--ring)] bg-[var(--paper)] p-6" data-reveal>
+          <p class="text-xs font-bold uppercase tracking-[0.2em] text-[var(--accent)]">Chapter 2</p>
+          <h3 class="mt-2 font-display text-2xl font-semibold">Chronicle</h3>
+          <p class="mt-2 text-sm text-[var(--muted)]">Log every match with outcomes, opponent commanders, and notes.</p>
+        </article>
+        <article class="reveal rounded-2xl border border-[var(--ring)] bg-[var(--paper)] p-6" data-reveal>
+          <p class="text-xs font-bold uppercase tracking-[0.2em] text-[var(--accent)]">Chapter 3</p>
+          <h3 class="mt-2 font-display text-2xl font-semibold">Refine</h3>
+          <p class="mt-2 text-sm text-[var(--muted)]">See trends and adjust deck choices before the next season begins.</p>
+        </article>
+      </div>
     </section>
 
-    <!-- Screenshots Section -->
-    <section class="screenshots" id="screenshots">
-        <div class="container">
-            <h2 class="section-title">See It In Action</h2>
-            <p class="section-subtitle">A clean, intuitive interface designed for Commander players</p>
-
-            <div class="screenshots-carousel">
-                <div class="screenshot-item" data-animate>
-                    <img src="assets/New-Deck-Grid-View.png" alt="Deck Grid View" class="screenshot-image">
-                    <p class="screenshot-caption">Browse, manage, and tweak your deck collection</p>
-                </div>
-
-                <div class="screenshot-item" data-animate>
-                    <img src="assets/New-Statistics-View.png" alt="Statistics Dashboard" class="screenshot-image">
-                    <p class="screenshot-caption">Analyze your performance with detailed stats</p>
-                </div>
-
-                <div class="screenshot-item" data-animate>
-                    <img src="assets/Game-History-View.png" alt="Game History" class="screenshot-image">
-                    <p class="screenshot-caption">View and manage your EDH game history</p>
-                </div>
-            </div>
-        </div>
+    <section class="grid gap-6 pb-16 lg:grid-cols-[1.1fr_0.9fr]">
+      <article class="reveal rounded-2xl border border-[var(--ring)] bg-[var(--paper)] p-6" data-reveal>
+        <p class="text-xs font-bold uppercase tracking-[0.2em] text-[var(--accent)]">Core Modules</p>
+        <h2 class="mt-2 font-display text-3xl font-bold">Outcome-focused feature framing</h2>
+        <ul class="mt-5 grid gap-4 text-sm text-[var(--muted)] sm:grid-cols-2">
+          <li class="rounded-xl border border-[var(--ring)] bg-[var(--paper-soft)] p-4"><span class="font-bold text-[var(--ink)]">Deck Library:</span> keep every commander list in one searchable index.</li>
+          <li class="rounded-xl border border-[var(--ring)] bg-[var(--paper-soft)] p-4"><span class="font-bold text-[var(--ink)]">Stats Engine:</span> track win rates, streaks, and color patterns.</li>
+          <li class="rounded-xl border border-[var(--ring)] bg-[var(--paper-soft)] p-4"><span class="font-bold text-[var(--ink)]">Pod Buddies:</span> surface rivalries and matchup history.</li>
+          <li class="rounded-xl border border-[var(--ring)] bg-[var(--paper-soft)] p-4"><span class="font-bold text-[var(--ink)]">Life Counter:</span> run gameplay tools without leaving the app.</li>
+        </ul>
+      </article>
+      <article class="reveal rounded-2xl border border-[var(--ring)] bg-[var(--paper)] p-6" data-reveal>
+        <p class="text-xs font-bold uppercase tracking-[0.2em] text-[var(--accent)]">Visual Proof</p>
+        <img src="assets/New-Statistics-View.png" alt="Statistics" class="mt-4 rounded-xl border border-[var(--ring)] animate-floaty" />
+      </article>
     </section>
 
-    <!-- Download Section -->
-    <section class="download" id="download">
-        <div class="container">
-            <h2 class="section-title">Get Seasons Past</h2>
-            <p class="section-subtitle">Start tracking your Commander games today</p>
-
-            <div class="download-grid download-grid-single">
-                <div class="download-card" data-animate>
-                    <div class="download-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <line x1="2" y1="12" x2="22" y2="12"></line>
-                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-                        </svg>
-                    </div>
-                    <h3>Web App</h3>
-                    <p>Access from any browser on any device. Sign in with Google or email to sync your data across devices.</p>
-                    <ul class="download-features">
-                        <li>Works on any device with a browser</li>
-                        <li>Cloud sync across all your devices</li>
-                        <li>Always up to date</li>
-                    </ul>
-                    <a href="https://app.seasonspast.app/" class="btn btn-primary" target="_blank" rel="noopener">
-                        Open Web App
-                    </a>
-                </div>
-            </div>
+    <section class="reveal rounded-3xl border border-[var(--ring)] bg-[var(--paper)] p-8" data-reveal>
+      <div class="grid gap-6 md:grid-cols-[1.05fr_0.95fr] md:items-center">
+        <div>
+          <p class="text-xs font-bold uppercase tracking-[0.2em] text-[var(--accent)]">Final CTA</p>
+          <h2 class="mt-2 font-display text-4xl font-bold">Track your next pod night with intent</h2>
+          <p class="mt-2 text-sm text-[var(--muted)]">Your match history, deck choices, and pod trends in one place.</p>
         </div>
+        <div class="flex flex-wrap gap-3 md:justify-end">
+          <a href="https://app.seasonspast.app/" target="_blank" rel="noopener" class="rounded-md bg-[var(--accent)] px-6 py-3 text-sm font-bold uppercase tracking-[0.14em] text-white transition hover:bg-[var(--accent-strong)]">Start Tracking</a>
+          <a href="privacy.html" class="rounded-md border border-[var(--ring)] px-6 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-[var(--muted)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]">Privacy</a>
+        </div>
+      </div>
     </section>
+  </main>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-brand">
-                    <img src="assets/header.svg" alt="Seasons Past" class="footer-logo">
-                    <p>Made for the Commander community</p>
-                </div>
-                <div class="footer-links">
-                    <a href="https://github.com/CuriousFrost/Seasons-Past" target="_blank" rel="noopener">
-                        <svg viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-                        </svg>
-                        GitHub
-                    </a>
-                    <a href="https://github.com/CuriousFrost/Seasons-Past/issues" target="_blank" rel="noopener">
-                        Report an Issue
-                    </a>
-                    <a href="/privacy.html">
-                        Privacy Policy
-                    </a>
-                    <a href="/terms.html">
-                        Terms of Service
-                    </a>
-                </div>
-            </div>
-            <div class="footer-disclaimer">
-                <p>Seasons Past is unofficial Fan Content permitted under the Fan Content Policy. Not approved/endorsed by Wizards. Portions of the materials used are property of Wizards of the Coast. &copy; Wizards of the Coast LLC.</p>
-            </div>
-            <div class="footer-copyright">
-                <p>&copy; 2025–2026 Seasons Past. Open source under MIT License.</p>
-            </div>
-        </div>
-    </footer>
+  <footer class="relative z-10 mx-auto mt-14 w-full max-w-6xl border-t border-[var(--ring)] px-6 py-10 sm:px-10">
+    <div class="flex flex-wrap items-center justify-between gap-4">
+      <p class="text-sm text-[var(--muted)]">Made for the Commander community</p>
+      <div class="flex flex-wrap items-center gap-4 text-sm">
+        <a href="https://github.com/CuriousFrost/Seasons-Past" target="_blank" rel="noopener" class="text-[var(--muted)] transition hover:text-[var(--accent)]">GitHub</a>
+        <a href="https://github.com/CuriousFrost/Seasons-Past/issues" target="_blank" rel="noopener" class="text-[var(--muted)] transition hover:text-[var(--accent)]">Report an Issue</a>
+        <a href="privacy.html" class="text-[var(--muted)] transition hover:text-[var(--accent)]">Privacy Policy</a>
+        <a href="terms.html" class="text-[var(--muted)] transition hover:text-[var(--accent)]">Terms of Service</a>
+      </div>
+    </div>
+    <p class="mt-6 border-t border-[var(--ring)] pt-6 text-xs leading-relaxed text-[var(--muted)]">
+      Seasons Past is unofficial Fan Content permitted under the Fan Content Policy. Not approved/endorsed by Wizards.
+      Portions of the materials used are property of Wizards of the Coast. Copyright Wizards of the Coast LLC.
+    </p>
+    <p class="mt-4 text-xs text-[var(--muted)]">&copy; 2025-2026 Seasons Past. Open source under MIT License.</p>
+  </footer>
 
-    <script src="script.js"></script>
+  <script>
+    (function () {
+      const body = document.body;
+      const modeButtons = document.querySelectorAll('[data-set-mode]');
+      const accentButtons = document.querySelectorAll('[data-set-accent]');
+      const revealNodes = document.querySelectorAll('[data-reveal]');
+
+      function syncState() {
+        const mode = body.getAttribute('data-mode') || 'light';
+        const accent = body.getAttribute('data-accent') || 'amber';
+
+        modeButtons.forEach((btn) => {
+          btn.classList.toggle('is-active', btn.getAttribute('data-set-mode') === mode);
+        });
+
+        accentButtons.forEach((btn) => {
+          btn.classList.toggle('is-active', btn.getAttribute('data-set-accent') === accent);
+        });
+      }
+
+      modeButtons.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const mode = btn.getAttribute('data-set-mode');
+          if (mode) {
+            body.setAttribute('data-mode', mode);
+            syncState();
+          }
+        });
+      });
+
+      accentButtons.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const accent = btn.getAttribute('data-set-accent');
+          if (accent) {
+            body.setAttribute('data-accent', accent);
+            syncState();
+          }
+        });
+      });
+
+      syncState();
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+
+      revealNodes.forEach((node) => observer.observe(node));
+    })();
+  </script>
 </body>
 </html>
-

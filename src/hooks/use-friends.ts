@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
+import { createCache } from "@/lib/cache";
 import {
   acceptFriendRequest as acceptLib,
   declineFriendRequest as declineLib,
@@ -12,11 +13,21 @@ import {
 } from "@/lib/friends";
 import type { Friend, FriendPublicData, FriendRequest } from "@/types";
 
+type FriendsData = {
+  friends: Friend[];
+  pendingRequests: FriendRequest[];
+};
+
+const cache = createCache<FriendsData>();
+
 export function useFriends(myFriendId: string | null, myUsername: string) {
   const { user } = useAuth();
-  const [friends, setFriends] = useState<Friend[]>([]);
-  const [pendingRequests, setPendingRequests] = useState<FriendRequest[]>([]);
-  const [loading, setLoading] = useState(true);
+  const cached = user ? cache.get(user.uid) : null;
+  const [friends, setFriends] = useState<Friend[]>(cached?.friends ?? []);
+  const [pendingRequests, setPendingRequests] = useState<FriendRequest[]>(
+    cached?.pendingRequests ?? [],
+  );
+  const [loading, setLoading] = useState(!cached);
   const [error, setError] = useState<string | null>(null);
 
   const reload = useCallback(async () => {
@@ -32,6 +43,7 @@ export function useFriends(myFriendId: string | null, myUsername: string) {
       const resolved = await loadFriendsWithProfiles(friendIds);
       setFriends(resolved);
       setPendingRequests(pending);
+      cache.set(user.uid, { friends: resolved, pendingRequests: pending });
     } catch (err) {
       setError("Failed to load friends.");
       console.error("useFriends reload error:", err);
@@ -40,11 +52,24 @@ export function useFriends(myFriendId: string | null, myUsername: string) {
 
   useEffect(() => {
     if (!user) {
+      setFriends([]);
+      setPendingRequests([]);
+      setError(null);
+      setLoading(false);
+      return;
+    }
+    const userUid = user.uid;
+
+    if (cache.get(userUid)) {
+      const c = cache.get(userUid)!;
+      setFriends(c.friends);
+      setPendingRequests(c.pendingRequests);
       setLoading(false);
       return;
     }
 
     let cancelled = false;
+    setLoading(true);
 
     async function load() {
       try {

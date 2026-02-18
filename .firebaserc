@@ -1,5 +1,13 @@
 {
   "projects": {
     "default": "mtg-commander-game-track-65843"
+  },
+  "targets": {
+    "mtg-commander-game-track-65843": {
+      "hosting": {
+        "app": ["seasons-past-app"],
+        "landing": ["mtg-commander-game-track-65843"]
+      }
+    }
   }
 }

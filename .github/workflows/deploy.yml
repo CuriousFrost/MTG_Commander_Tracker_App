@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 jobs:
-  build_and_deploy:
+  deploy_app:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -28,3 +28,17 @@ jobs:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_MTG_COMMANDER_GAME_TRACK_65843 }}
           projectId: mtg-commander-game-track-65843
           channelId: live
+          target: app
+
+  deploy_landing:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_MTG_COMMANDER_GAME_TRACK_65843 }}
+          projectId: mtg-commander-game-track-65843
+          channelId: live
+          target: landing

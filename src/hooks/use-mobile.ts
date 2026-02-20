@@ -19,12 +19,14 @@ function useMediaQuery(query: string) {
   return matches
 }
 
-export function useIsMobile() {
-  return useMediaQuery(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
-}
-
 export function useIsLandscapeMobile() {
   const isLandscape = useMediaQuery("(orientation: landscape)")
   const shortViewport = useMediaQuery("(max-height: 860px)")
   return isLandscape && shortViewport
+}
+
+export function useIsMobile() {
+  const isPortraitMobile = useMediaQuery(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
+  const isLandscapeMobile = useIsLandscapeMobile()
+  return isPortraitMobile || isLandscapeMobile
 }

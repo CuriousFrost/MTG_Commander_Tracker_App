@@ -1,13 +1,20 @@
 import {
   arrayRemove,
   arrayUnion,
+  deleteField,
   doc,
   getDoc,
   serverTimestamp,
   setDoc,
   updateDoc,
 } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import {
+  deleteObject,
+  getDownloadURL,
+  ref,
+  uploadBytes,
+} from "firebase/storage";
+import { db, storage } from "@/lib/firebase";
 import type { Friend, FriendPublicData, FriendRequest } from "@/types";
 
 // Characters excluding ambiguous: 0, O, 1, I, L
@@ -28,6 +35,7 @@ export function generateFriendId(): string {
 export interface ProfileData {
   friendId: string;
   username: string;
+  profileImageUrl?: string;
 }
 
 /**
@@ -46,6 +54,7 @@ export async function ensureUserProfile(
     return {
       friendId: data.friendId,
       username: data.username ?? email.split("@")[0],
+      profileImageUrl: data.profileImageUrl as string | undefined,
     };
   }
 
@@ -81,6 +90,31 @@ export async function ensureUserProfile(
   );
 
   return { friendId, username };
+}
+
+export async function uploadAvatar(uid: string, file: File): Promise<string> {
+  const storageRef = ref(storage, `avatars/${uid}/profile.jpg`);
+  await uploadBytes(storageRef, file);
+  const url = await getDownloadURL(storageRef);
+  await setDoc(
+    doc(db, "users", uid),
+    { profileImageUrl: url, lastUpdated: serverTimestamp() },
+    { merge: true },
+  );
+  return url;
+}
+
+export async function removeAvatar(uid: string): Promise<void> {
+  const storageRef = ref(storage, `avatars/${uid}/profile.jpg`);
+  try {
+    await deleteObject(storageRef);
+  } catch {
+    // ignore if file doesn't exist
+  }
+  await updateDoc(doc(db, "users", uid), {
+    profileImageUrl: deleteField(),
+    lastUpdated: serverTimestamp(),
+  });
 }
 
 export async function updateUsername(
@@ -223,6 +257,7 @@ export async function loadFriendsWithProfiles(
       friendId,
       username: (data.username as string) ?? "Unknown",
       uid: friendUid,
+      profileImageUrl: data.profileImageUrl as string | undefined,
     });
   }
 
@@ -245,5 +280,6 @@ export async function getFriendPublicData(
     username: (data.username as string) ?? "Unknown",
     decks: data.decks ?? [],
     games: data.games ?? [],
+    profileImageUrl: data.profileImageUrl as string | undefined,
   };
 }

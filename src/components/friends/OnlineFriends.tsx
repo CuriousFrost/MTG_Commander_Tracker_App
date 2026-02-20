@@ -197,13 +197,26 @@ export function OnlineFriends({
             {friends.map((friend) => (
               <Card key={friend.friendId} className="gap-2 py-3">
                 <CardHeader className="space-y-0">
-                  <div>
-                    <CardTitle className="text-base">
-                      {friend.username}
-                    </CardTitle>
-                    <p className="text-muted-foreground break-all text-xs font-mono">
-                      {friend.friendId}
-                    </p>
+                  <div className="flex items-center gap-3">
+                    {friend.profileImageUrl ? (
+                      <img
+                        src={friend.profileImageUrl}
+                        alt={friend.username}
+                        className="h-8 w-8 rounded-full object-cover shrink-0"
+                      />
+                    ) : (
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-bold">
+                        {friend.username.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <div>
+                      <CardTitle className="text-base">
+                        {friend.username}
+                      </CardTitle>
+                      <p className="text-muted-foreground break-all text-xs font-mono">
+                        {friend.friendId}
+                      </p>
+                    </div>
                   </div>
                   <CardAction>
                     <div className="flex gap-1">

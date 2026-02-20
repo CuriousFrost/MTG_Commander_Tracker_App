@@ -73,6 +73,7 @@ export interface Friend {
   friendId: string;
   username: string;
   uid: string;
+  profileImageUrl?: string;
 }
 
 export interface FriendPublicData {
@@ -80,6 +81,7 @@ export interface FriendPublicData {
   username: string;
   decks: Deck[];
   games: Game[];
+  profileImageUrl?: string;
 }
 
 // ─── User Profile (Firestore: users/{uid}) ───────────────────────────
@@ -95,5 +97,6 @@ export interface UserProfile {
   decks: Deck[];
   games: Game[];
   podBuddies?: string[];
+  profileImageUrl?: string;
   lastUpdated: unknown; // Firestore Timestamp at runtime
 }

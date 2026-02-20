@@ -4,6 +4,8 @@ import { createCache } from "@/lib/cache";
 import {
   ensureUserProfile,
   updateUsername as updateUsernameLib,
+  uploadAvatar as uploadAvatarLib,
+  removeAvatar as removeAvatarLib,
   type ProfileData,
 } from "@/lib/friends";
 
@@ -81,5 +83,46 @@ export function useUserProfile() {
     [user, profile],
   );
 
-  return { profile, loading, error, updateUsername };
+  const updateAvatar = useCallback(
+    async (file: File | null) => {
+      if (!user || !profile) return;
+
+      if (file) {
+        const objectUrl = URL.createObjectURL(file);
+        const optimistic = { ...profile, profileImageUrl: objectUrl };
+        setProfile(optimistic);
+        cache.set(user.uid, optimistic);
+
+        try {
+          const url = await uploadAvatarLib(user.uid, file);
+          URL.revokeObjectURL(objectUrl);
+          const updated = { ...profile, profileImageUrl: url };
+          setProfile(updated);
+          cache.set(user.uid, updated);
+        } catch (err) {
+          URL.revokeObjectURL(objectUrl);
+          setError("Failed to upload avatar.");
+          console.error("updateAvatar error:", err);
+          setProfile(profile);
+          cache.set(user.uid, profile);
+        }
+      } else {
+        const updated = { ...profile, profileImageUrl: undefined };
+        setProfile(updated);
+        cache.set(user.uid, updated);
+
+        try {
+          await removeAvatarLib(user.uid);
+        } catch (err) {
+          setError("Failed to remove avatar.");
+          console.error("removeAvatar error:", err);
+          setProfile(profile);
+          cache.set(user.uid, profile);
+        }
+      }
+    },
+    [user, profile],
+  );
+
+  return { profile, loading, error, updateUsername, updateAvatar };
 }

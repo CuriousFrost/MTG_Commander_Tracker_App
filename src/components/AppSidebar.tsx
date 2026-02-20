@@ -22,6 +22,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarSeparator,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -45,6 +46,7 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { profile } = useUserProfile();
+  const { setOpenMobile, isMobile } = useSidebar();
 
   const displayName =
     profile?.username || user?.displayName || user?.email?.split("@")[0] || "User";
@@ -75,7 +77,10 @@ export function AppSidebar() {
                   <SidebarMenuButton
                     size="lg"
                     isActive={location.pathname === item.path}
-                    onClick={() => navigate(item.path)}
+                    onClick={() => {
+                      if (isMobile) setOpenMobile(false);
+                      navigate(item.path);
+                    }}
                   >
                     <item.icon className="!h-5 !w-5" />
                     <span className="text-[15px]">{item.title}</span>
@@ -100,9 +105,17 @@ export function AppSidebar() {
 
         {/* User info + Sign Out */}
         <div className="flex items-center gap-2 px-2 pt-1">
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-bold">
-            {initial}
-          </div>
+          {profile?.profileImageUrl ? (
+            <img
+              src={profile.profileImageUrl}
+              alt={displayName}
+              className="h-7 w-7 rounded-full object-cover shrink-0"
+            />
+          ) : (
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-bold">
+              {initial}
+            </div>
+          )}
           <span className="min-w-0 flex-1 truncate text-sm font-medium">
             {displayName}
           </span>

@@ -2,7 +2,7 @@ import { Outlet, useLocation } from "react-router-dom";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Separator } from "@/components/ui/separator";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useIsSmallDevice } from "@/hooks/use-mobile";
 
 export function AppLayout() {
   return (
@@ -15,9 +15,9 @@ export function AppLayout() {
 
 function AppLayoutInner() {
   const location = useLocation();
-  const isMobile = useIsMobile();
+  const isSmallDevice = useIsSmallDevice();
   const isLifeCounter = location.pathname === "/life-counter";
-  const isFullscreen = isLifeCounter && isMobile;
+  const isFullscreen = isLifeCounter && isSmallDevice;
 
   if (isFullscreen) {
     return (

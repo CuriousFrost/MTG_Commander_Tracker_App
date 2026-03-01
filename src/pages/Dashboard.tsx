@@ -171,12 +171,12 @@ export default function Dashboard() {
             <Card className="gap-0 py-3">
               <CardHeader className="px-4 pb-1">
                 <CardTitle className="text-muted-foreground text-xs font-medium">
-                  Most Played Deck
+                  Most Played Commander
                 </CardTitle>
               </CardHeader>
               <CardContent className="px-4">
                 <p className="text-lg font-bold truncate">
-                  {stats.mostPlayedDeck ?? "—"}
+                  {stats.mostPlayedCommander ?? "—"}
                 </p>
               </CardContent>
             </Card>

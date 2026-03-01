@@ -11,7 +11,7 @@ export interface OverviewStats {
   currentStreak: string;
   longestWinStreak: number;
   longestLossStreak: number;
-  mostPlayedDeck: string | null;
+  mostPlayedCommander: string | null;
   avgGamesPerMonth: number;
   nemesisCommander: string | null;
   nemesisRecord: string | null;
@@ -32,7 +32,7 @@ export function computeOverviewStats(
       currentStreak: "—",
       longestWinStreak: 0,
       longestLossStreak: 0,
-      mostPlayedDeck: null,
+      mostPlayedCommander: null,
       avgGamesPerMonth: 0,
       nemesisCommander: null,
       nemesisRecord: null,
@@ -78,18 +78,18 @@ export function computeOverviewStats(
     }
   }
 
-  // Most played deck
-  const deckCounts = new Map<string, number>();
+  // Most played commander
+  const commanderCounts = new Map<string, number>();
   for (const g of games) {
-    const name = g.myDeck.name;
-    deckCounts.set(name, (deckCounts.get(name) ?? 0) + 1);
+    const name = g.myDeck.commander.name;
+    commanderCounts.set(name, (commanderCounts.get(name) ?? 0) + 1);
   }
-  let mostPlayedDeck: string | null = null;
+  let mostPlayedCommander: string | null = null;
   let maxCount = 0;
-  for (const [name, count] of deckCounts) {
+  for (const [name, count] of commanderCounts) {
     if (count > maxCount) {
       maxCount = count;
-      mostPlayedDeck = name;
+      mostPlayedCommander = name;
     }
   }
 
@@ -112,7 +112,7 @@ export function computeOverviewStats(
     currentStreak,
     longestWinStreak,
     longestLossStreak,
-    mostPlayedDeck,
+    mostPlayedCommander,
     avgGamesPerMonth,
     nemesisCommander: nemesis?.commanderName ?? null,
     nemesisRecord: nemesis

@@ -117,12 +117,12 @@ export function OverviewCards({ stats }: OverviewCardsProps) {
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-muted-foreground text-sm font-medium">
-            Most Played Deck
+            Most Played Commander
           </CardTitle>
         </CardHeader>
         <CardContent>
           <p className="truncate text-lg font-bold">
-            {stats.mostPlayedDeck ?? "--"}
+            {stats.mostPlayedCommander ?? "--"}
           </p>
         </CardContent>
       </Card>

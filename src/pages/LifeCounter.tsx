@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { useIsMobile, useIsLandscapeMobile } from "@/hooks/use-mobile";
+import { useIsSmallDevice, useIsLandscapeMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
 type PlayerCount = 2 | 3 | 4 | 5 | 6;
@@ -191,30 +191,33 @@ function MobilePlayerCard({
 
       <p className="w-full truncate text-center text-xs font-semibold">{player.name}</p>
 
-      <div className="flex flex-1 items-center justify-center">
-        <span className="text-4xl font-bold tabular-nums">{player.life}</span>
-      </div>
-
-      <div className="flex w-full gap-1">
+      <div className="flex min-h-0 flex-1 items-stretch">
         <Button
-          variant="secondary"
-          className="h-10 flex-1 text-xl"
+          variant="ghost"
+          className="flex-1 text-2xl font-bold"
           onClick={() => onAdjustLife(-1)}
         >
           −
         </Button>
-        <Button className="h-10 flex-1 text-xl" onClick={() => onAdjustLife(1)}>
+        <div className="flex items-center justify-center px-1">
+          <span className="text-5xl font-bold tabular-nums">{player.life}</span>
+        </div>
+        <Button
+          variant="ghost"
+          className="flex-1 text-2xl font-bold"
+          onClick={() => onAdjustLife(1)}
+        >
           +
         </Button>
       </div>
 
       <div className="flex gap-2 pt-1">
-        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onOpenCD}>
-          <Swords className="h-4 w-4" />
+        <Button variant="ghost" size="icon" className="h-11 w-11" onClick={onOpenCD}>
+          <Swords className="h-6 w-6" />
         </Button>
         <div className="relative">
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onOpenPoison}>
-            <Skull className="h-4 w-4" />
+          <Button variant="ghost" size="icon" className="h-11 w-11" onClick={onOpenPoison}>
+            <Skull className="h-6 w-6" />
           </Button>
           {player.poison > 0 && (
             <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-green-500 text-[9px] font-bold text-white">
@@ -239,12 +242,12 @@ export default function LifeCounter() {
   const [activeCDPlayer, setActiveCDPlayer] = useState<number | null>(null);
   const [activePoisonPlayer, setActivePoisonPlayer] = useState<number | null>(null);
 
-  const isMobile = useIsMobile();
+  const isSmallDevice = useIsSmallDevice();
   const isLandscape = useIsLandscapeMobile();
 
   // Lock to landscape on mobile
   useEffect(() => {
-    if (!isMobile) return;
+    if (!isSmallDevice) return;
     (screen.orientation as unknown as { lock: (o: string) => Promise<void> })
       .lock("landscape")
       .catch(() => {});
@@ -253,7 +256,7 @@ export default function LifeCounter() {
         (screen.orientation as unknown as { unlock: () => void }).unlock();
       } catch {}
     };
-  }, [isMobile]);
+  }, [isSmallDevice]);
 
   useEffect(() => {
     setPlayers((prev) => normalizePlayers(playerCount, prev));
@@ -398,24 +401,26 @@ export default function LifeCounter() {
     });
   }
 
-  // Portrait overlay — show when on a mobile device but not yet in landscape
-  if (isMobile && !isLandscape) {
-    return (
-      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-background p-6 text-center">
-        <div className="text-5xl">↺</div>
-        <p className="text-xl font-semibold">Rotate your device</p>
-        <p className="text-sm text-muted-foreground">
-          Life counter works in landscape only.
-        </p>
-      </div>
-    );
-  }
-
-  // Mobile landscape game board
-  if (isMobile) {
+  // Mobile game board — always mounted so state survives rotation
+  if (isSmallDevice) {
     const config = GRID_CONFIGS[playerCount];
     return (
       <div className="fixed inset-0 flex flex-col bg-background">
+        {/* Portrait overlay — rendered on top; game board stays mounted below */}
+        {!isLandscape && (
+          <div className="fixed inset-0 z-50 flex flex-col bg-background p-6 text-center">
+            <div className="flex items-center">
+              <SidebarTrigger className="h-8 w-8" />
+            </div>
+            <div className="flex flex-1 flex-col items-center justify-center gap-4">
+              <div className="text-5xl">↺</div>
+              <p className="text-xl font-semibold">Rotate your device</p>
+              <p className="text-sm text-muted-foreground">
+                Life counter works in landscape only.
+              </p>
+            </div>
+          </div>
+        )}
         {/* Compact top bar */}
         <div className="flex shrink-0 items-center gap-2 border-b px-2 py-1">
           <SidebarTrigger className="h-8 w-8" />

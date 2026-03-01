@@ -30,3 +30,13 @@ export function useIsMobile() {
   const isLandscapeMobile = useIsLandscapeMobile()
   return isPortraitMobile || isLandscapeMobile
 }
+
+export function useIsSmallDevice(): boolean {
+  const [small] = React.useState(
+    () =>
+      typeof window !== "undefined"
+        ? Math.min(window.screen.width, window.screen.height) < MOBILE_BREAKPOINT
+        : false,
+  )
+  return small
+}

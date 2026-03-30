@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Plus, Users } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -10,16 +10,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CommanderSearch } from "@/components/commanders/CommanderSearch";
 import { ManaSymbols } from "@/components/commanders/ManaSymbols";
 import {
   OpponentRow,
   emptyOpponentEntry,
   type OpponentEntry,
 } from "@/components/games/OpponentRow";
-import { fetchCommanderByName } from "@/lib/scryfall";
 import { buildColorString } from "@/lib/utils";
-import type { Commander, Deck, Game } from "@/types";
+import type { Deck, Game } from "@/types";
 
 interface AddGameFormProps {
   decks: Deck[];
@@ -52,9 +50,6 @@ export function AddGameForm({
   const [winningCommanderName, setWinningCommanderName] = useState<
     string | null
   >(null);
-  const [winningCommanderData, setWinningCommanderData] =
-    useState<Commander | null>(null);
-  const [fetchingCommander, setFetchingCommander] = useState(false);
 
   const selectedDeck = decks.find((d) => d.id === Number(deckId));
 
@@ -93,16 +88,15 @@ export function AddGameForm({
     });
   }
 
-  async function handleCommanderSelect(name: string) {
-    setWinningCommanderName(name);
-    setFetchingCommander(true);
-    try {
-      const data = await fetchCommanderByName(name);
-      setWinningCommanderData(data);
-    } finally {
-      setFetchingCommander(false);
+  // Clear winning commander if its opponent entry is removed
+  useEffect(() => {
+    if (
+      winningCommanderName !== null &&
+      !filledOpponents.some((o) => o.commanderName === winningCommanderName)
+    ) {
+      setWinningCommanderName(null);
     }
-  }
+  }, [filledOpponents, winningCommanderName]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -116,9 +110,13 @@ export function AddGameForm({
         selectedDeck.commander.colorIdentity,
       );
     } else {
-      winnerColorIdentity = winningCommanderData
-        ? buildColorString(winningCommanderData.colorIdentity)
-        : "C";
+      const winningOpp = filledOpponents.find(
+        (o) => o.commanderName === winningCommanderName,
+      );
+      winnerColorIdentity =
+        winningOpp && winningOpp.commanderColorIdentity.length > 0
+          ? buildColorString(winningOpp.commanderColorIdentity)
+          : "C";
       winningCommander = winningCommanderName?.trim() ?? null;
     }
 
@@ -239,7 +237,6 @@ export function AddGameForm({
             setWon(e.target.checked);
             if (e.target.checked) {
               setWinningCommanderName(null);
-              setWinningCommanderData(null);
             }
           }}
           className="accent-primary h-4 w-4 rounded"
@@ -251,19 +248,34 @@ export function AddGameForm({
       {!won && (
         <div className="max-w-sm space-y-2">
           <label className="text-sm font-medium">Winning Commander</label>
-          <CommanderSearch onSelect={handleCommanderSelect} />
-          {fetchingCommander && (
-            <p className="text-muted-foreground text-xs">
-              Loading commander data...
+          {filledOpponents.length === 0 ? (
+            <p className="text-muted-foreground text-sm">
+              Add opponent commanders above first.
             </p>
-          )}
-          {winningCommanderData && winningCommanderName && (
-            <div className="flex items-center gap-2 text-sm">
-              <ManaSymbols
-                colorIdentity={winningCommanderData.colorIdentity}
-              />
-              <span>{winningCommanderName}</span>
-            </div>
+          ) : (
+            <Select
+              value={winningCommanderName ?? ""}
+              onValueChange={(val) => setWinningCommanderName(val || null)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select winning commander" />
+              </SelectTrigger>
+              <SelectContent>
+                {filledOpponents.map((opp, i) => (
+                  <SelectItem key={i} value={opp.commanderName}>
+                    <span className="flex items-center gap-2">
+                      {opp.commanderColorIdentity.length > 0 && (
+                        <ManaSymbols
+                          colorIdentity={opp.commanderColorIdentity}
+                          size="sm"
+                        />
+                      )}
+                      <span>{opp.commanderName}</span>
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           )}
         </div>
       )}

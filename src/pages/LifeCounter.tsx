@@ -177,7 +177,7 @@ function MobilePlayerCard({
   return (
     <div
       className={cn(
-        "relative flex h-full w-full select-none flex-col items-center rounded-lg border p-1",
+        "relative flex h-full w-full select-none flex-col items-center rounded-lg border p-1 md:p-2",
         panelColor,
         eliminated && "opacity-60 grayscale",
         rotation === "180" && "rotate-180",
@@ -189,22 +189,23 @@ function MobilePlayerCard({
         </div>
       )}
 
-      <p className="w-full truncate text-center text-xs font-semibold">{player.name}</p>
+      <p className="w-full truncate text-center text-xs font-semibold md:text-sm">{player.name}</p>
 
-      <div className="flex min-h-0 w-full flex-1 items-stretch">
+      {/* Grid keeps number perfectly centred regardless of digit count */}
+      <div className="grid min-h-0 w-full flex-1 grid-cols-[1fr_auto_1fr]">
         <Button
           variant="ghost"
-          className="flex-1 text-2xl font-bold md:text-3xl"
+          className="h-full text-2xl font-bold md:text-3xl"
           onClick={() => onAdjustLife(-1)}
         >
           −
         </Button>
-        <div className="flex items-center justify-center px-1">
+        <div className="flex items-center justify-center px-2">
           <span className="text-5xl font-bold tabular-nums md:text-7xl">{player.life}</span>
         </div>
         <Button
           variant="ghost"
-          className="flex-1 text-2xl font-bold md:text-3xl"
+          className="h-full text-2xl font-bold md:text-3xl"
           onClick={() => onAdjustLife(1)}
         >
           +
@@ -212,15 +213,15 @@ function MobilePlayerCard({
       </div>
 
       <div className="flex gap-2 pt-1">
-        <Button variant="ghost" size="icon" className="h-11 w-11" onClick={onOpenCD}>
-          <Swords className="h-6 w-6" />
+        <Button variant="ghost" size="icon" className="h-11 w-11 md:h-14 md:w-14" onClick={onOpenCD}>
+          <Swords className="h-6 w-6 md:h-8 md:w-8" />
         </Button>
         <div className="relative">
-          <Button variant="ghost" size="icon" className="h-11 w-11" onClick={onOpenPoison}>
-            <Skull className="h-6 w-6" />
+          <Button variant="ghost" size="icon" className="h-11 w-11 md:h-14 md:w-14" onClick={onOpenPoison}>
+            <Skull className="h-6 w-6 md:h-8 md:w-8" />
           </Button>
           {player.poison > 0 && (
-            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-green-500 text-[9px] font-bold text-white">
+            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-green-500 text-[9px] font-bold text-white md:h-5 md:w-5 md:text-[11px]">
               {player.poison}
             </span>
           )}
@@ -376,14 +377,14 @@ export default function LifeCounter() {
             <Button
               variant="outline"
               size="icon-sm"
-              className="h-9 w-9 text-lg"
+              className="h-9 w-9 text-lg md:h-12 md:w-12 md:text-xl"
               onClick={() => adjustCommanderDamage(receiverIndex, opponentIndex, -1)}
             >
               -
             </Button>
             <span
               className={cn(
-                "w-8 text-center text-lg font-semibold",
+                "w-8 text-center text-lg font-semibold md:w-10 md:text-xl",
                 isLethal && "text-destructive",
               )}
             >
@@ -392,7 +393,7 @@ export default function LifeCounter() {
             <Button
               variant="outline"
               size="icon-sm"
-              className="h-9 w-9 text-lg"
+              className="h-9 w-9 text-lg md:h-12 md:w-12 md:text-xl"
               onClick={() => adjustCommanderDamage(receiverIndex, opponentIndex, 1)}
             >
               +
@@ -532,7 +533,7 @@ export default function LifeCounter() {
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-12 w-12 text-xl"
+                    className="h-12 w-12 text-xl md:h-16 md:w-16 md:text-2xl"
                     onClick={() => adjustPoison(activePoisonPlayer, -1)}
                   >
                     −
@@ -540,7 +541,7 @@ export default function LifeCounter() {
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-12 w-12 text-xl"
+                    className="h-12 w-12 text-xl md:h-16 md:w-16 md:text-2xl"
                     onClick={() => adjustPoison(activePoisonPlayer, 1)}
                   >
                     +

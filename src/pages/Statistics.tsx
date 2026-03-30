@@ -171,7 +171,7 @@ export default function Statistics() {
   }
 
   return (
-    <div className="min-w-0 space-y-6 overflow-x-hidden">
+    <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold">Statistics</h1>
@@ -322,12 +322,12 @@ export default function Statistics() {
         <div className="min-w-0 space-y-6">
           <OverviewCards stats={overview} />
 
-          <div className="grid gap-6 lg:grid-cols-2">
+          <div className="grid gap-6 lg:grid-cols-2 [&>*]:min-w-0">
             <DeckWinRateChart data={deckStats} />
             <GamesOverTimeChart data={monthlyStats} />
           </div>
 
-          <div className="grid gap-6 lg:grid-cols-3">
+          <div className="grid gap-6 lg:grid-cols-3 [&>*]:min-w-0">
             <ColorBreakdownChart
               data={colorStats}
               totalGames={overview.totalGames}

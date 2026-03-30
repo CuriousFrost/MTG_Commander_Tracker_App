@@ -202,7 +202,7 @@ export default function Dashboard() {
           <div className="border-t" />
 
           {/* Two-column: Lifetime GP Chart + Recent Games */}
-          <div className="grid gap-4 lg:grid-cols-2">
+          <div className="grid gap-4 lg:grid-cols-2 [&>*]:min-w-0">
             {/* Lifetime GP Chart */}
             <Card className="gap-0">
               <CardHeader className="px-4 py-3">
@@ -216,7 +216,7 @@ export default function Dashboard() {
                 ) : (
                   <ChartContainer
                     config={gpChartConfig}
-                    className="h-[200px] w-full"
+                    className="aspect-auto h-[200px] w-full"
                   >
                     <LineChart data={lifetimeGP.data}>
                       <CartesianGrid vertical={false} strokeDasharray="3 3" />

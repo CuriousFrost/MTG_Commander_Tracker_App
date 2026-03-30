@@ -68,7 +68,7 @@ export function ColorBreakdownChart({
       <CardContent>
         <ChartContainer
           config={chartConfig}
-          className="w-full"
+          className="aspect-auto w-full"
           style={{ height: Math.max(250, chartData.length * 40) }}
         >
           <BarChart data={chartData} layout="vertical" margin={{ top: 0, right: 12, left: 0, bottom: 0 }}>

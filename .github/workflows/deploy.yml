@@ -21,6 +21,8 @@ jobs:
 
       - run: npm ci
       - run: npm run build
+        env:
+          VITE_GOOGLE_AI_API_KEY: ${{ secrets.VITE_GOOGLE_AI_API_KEY }}
 
       - name: Authenticate with Firebase
         run: |

@@ -185,57 +185,81 @@ function MobileMenuSheet({
   onOpenCommanders: () => void;
   onReset: () => void;
 }) {
+  const [confirmReset, setConfirmReset] = useState(false);
+
+  function handleClose() {
+    setConfirmReset(false);
+    onClose();
+  }
+
   return (
-    <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
+    <Sheet open={open} onOpenChange={(v) => !v && handleClose()}>
       <SheetContent
         side="bottom"
-        className="max-h-[60vh] overflow-y-auto rounded-t-xl px-4 pb-8 pt-4"
+        className="rounded-t-xl px-4 pb-6 pt-3"
       >
-        <SheetHeader className="mb-3">
-          <SheetTitle>Game Menu</SheetTitle>
+        <SheetHeader className="mb-2">
+          <SheetTitle className="text-sm">Game Menu</SheetTitle>
         </SheetHeader>
 
-        <div className="space-y-3">
-          {/* Player count */}
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">Players</span>
-            <Select
-              value={String(playerCount)}
-              onValueChange={(v) => onSetPlayerCount(Number(v) as PlayerCount)}
-            >
-              <SelectTrigger className="h-9 w-32 text-sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {([2, 3, 4, 5, 6] as PlayerCount[]).map((n) => (
-                  <SelectItem key={n} value={String(n)}>
-                    {n} Players
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        {confirmReset ? (
+          <div className="space-y-2">
+            <p className="text-center text-sm text-muted-foreground">Reset all life totals and counters?</p>
+            <div className="flex gap-2">
+              <Button
+                variant="ghost"
+                className="flex-1"
+                onClick={() => setConfirmReset(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                className="flex-1"
+                onClick={() => { onReset(); handleClose(); }}
+              >
+                Reset
+              </Button>
+            </div>
           </div>
+        ) : (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">Players</span>
+              <Select
+                value={String(playerCount)}
+                onValueChange={(v) => onSetPlayerCount(Number(v) as PlayerCount)}
+              >
+                <SelectTrigger className="h-8 w-28 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {([2, 3, 4, 5, 6] as PlayerCount[]).map((n) => (
+                    <SelectItem key={n} value={String(n)}>
+                      {n} Players
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={() => { onOpenCommanders(); onClose(); }}
-          >
-            Assign Commanders
-          </Button>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => { onOpenCommanders(); handleClose(); }}
+            >
+              Assign Commanders
+            </Button>
 
-          <Button
-            variant="destructive"
-            className="w-full"
-            onClick={() => { onReset(); onClose(); }}
-          >
-            Reset Game
-          </Button>
-
-          <Button variant="ghost" className="w-full" onClick={onClose}>
-            Close
-          </Button>
-        </div>
+            <Button
+              variant="destructive"
+              className="w-full"
+              onClick={() => setConfirmReset(true)}
+            >
+              Reset Game
+            </Button>
+          </div>
+        )}
       </SheetContent>
     </Sheet>
   );

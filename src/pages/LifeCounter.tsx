@@ -461,8 +461,8 @@ export default function LifeCounter() {
   const [commanderAssignError, setCommanderAssignError] =
     useState<CommanderAssignError | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [poisonDialogPlayer, setPoisonDialogPlayer] = useState<number | null>(null);
-  const [cdDialogPlayer, setCdDialogPlayer] = useState<number | null>(null);
+  const [poisonDialogPlayer, setPoisonDialogPlayer] = useState<{ index: number; rotation: "0" | "180" | "side" } | null>(null);
+  const [cdDialogPlayer, setCdDialogPlayer] = useState<{ index: number; rotation: "0" | "180" | "side" } | null>(null);
 
   const isSmallDevice = useIsSmallDevice();
   const isLandscape = useIsLandscapeMobile();
@@ -735,8 +735,8 @@ export default function LifeCounter() {
                 hasCDDamage={commanderDamage[index]?.some((d, i) => i !== index && d > 0) ?? false}
                 eliminated={eliminated}
                 onAdjustLife={(delta) => adjustLife(index, delta)}
-                onOpenPoison={() => setPoisonDialogPlayer(index)}
-                onOpenCD={() => setCdDialogPlayer(index)}
+                onOpenPoison={() => setPoisonDialogPlayer({ index, rotation: p.rotation })}
+                onOpenCD={() => setCdDialogPlayer({ index, rotation: p.rotation })}
                 rotation={p.rotation}
               />
             );
@@ -770,63 +770,75 @@ export default function LifeCounter() {
           onReset={resetGame}
         />
 
-        {/* Poison counter sheet */}
-        {poisonDialogPlayer !== null && (
-          <Sheet open onOpenChange={(v) => { if (!v) setPoisonDialogPlayer(null); }}>
-            <SheetContent side="bottom" className="rounded-t-xl px-6 pb-8 pt-4">
-              <SheetHeader className="mb-4">
-                <SheetTitle>
-                  Poison — {players[poisonDialogPlayer]?.name}
-                </SheetTitle>
-              </SheetHeader>
-              <div className="flex items-center justify-center gap-8">
-                <Button
-                  size="icon"
-                  variant="outline"
-                  className="h-12 w-12 text-xl"
-                  onClick={() => adjustPoison(poisonDialogPlayer, -1)}
-                >
-                  −
-                </Button>
-                <span className={cn(
-                  "text-6xl font-bold tabular-nums",
-                  (players[poisonDialogPlayer]?.poison ?? 0) >= 10 && "text-destructive",
-                )}>
-                  {players[poisonDialogPlayer]?.poison ?? 0}
-                </span>
-                <Button
-                  size="icon"
-                  variant="outline"
-                  className="h-12 w-12 text-xl"
-                  onClick={() => adjustPoison(poisonDialogPlayer, 1)}
-                >
-                  +
-                </Button>
-              </div>
-              {(players[poisonDialogPlayer]?.poison ?? 0) >= 10 && (
-                <p className="mt-3 text-center text-sm font-semibold text-destructive">
-                  Eliminated by poison!
-                </p>
-              )}
-            </SheetContent>
-          </Sheet>
-        )}
+        {/* Poison counter dialog */}
+        {poisonDialogPlayer !== null && (() => {
+          const { index: pi, rotation } = poisonDialogPlayer;
+          const poison = players[pi]?.poison ?? 0;
+          const flip = rotation === "180";
+          return (
+            <Dialog open onOpenChange={(v) => { if (!v) setPoisonDialogPlayer(null); }}>
+              <DialogContent className={cn("w-72 max-w-[85vw]", flip && "rotate-180")}>
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Skull className="h-4 w-4" /> Poison — {players[pi]?.name}
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="flex items-center justify-center gap-8 py-2">
+                  <Button size="icon" variant="outline" className="h-12 w-12 text-xl"
+                    onClick={() => adjustPoison(pi, -1)}>−</Button>
+                  <span className={cn("text-6xl font-bold tabular-nums", poison >= 10 && "text-destructive")}>
+                    {poison}
+                  </span>
+                  <Button size="icon" variant="outline" className="h-12 w-12 text-xl"
+                    onClick={() => adjustPoison(pi, 1)}>+</Button>
+                </div>
+                {poison >= 10 && (
+                  <p className="text-center text-sm font-semibold text-destructive">Eliminated!</p>
+                )}
+              </DialogContent>
+            </Dialog>
+          );
+        })()}
 
-        {/* Commander damage sheet */}
-        {cdDialogPlayer !== null && (
-          <Sheet open onOpenChange={(v) => { if (!v) setCdDialogPlayer(null); }}>
-            <SheetContent side="bottom" className="max-h-[65vh] overflow-y-auto rounded-t-xl px-4 pb-8 pt-4">
-              <SheetHeader className="mb-4">
-                <SheetTitle>
-                  Commander Damage — {players[cdDialogPlayer]?.name}
-                </SheetTitle>
-              </SheetHeader>
-              <div className="space-y-3">
-                {renderCommanderDamageRows(cdDialogPlayer)}
-              </div>
-            </SheetContent>
-          </Sheet>
-        )}
+        {/* Commander damage dialog */}
+        {cdDialogPlayer !== null && (() => {
+          const { index: ci, rotation } = cdDialogPlayer;
+          const flip = rotation === "180";
+          return (
+            <Dialog open onOpenChange={(v) => { if (!v) setCdDialogPlayer(null); }}>
+              <DialogContent className={cn("w-80 max-w-[90vw]", flip && "rotate-180")}>
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Swords className="h-4 w-4" /> CMD Damage — {players[ci]?.name}
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="space-y-2 py-1">
+                  {players.map((opponent, oppIdx) => {
+                    if (oppIdx === ci) return null;
+                    const dmg = commanderDamage[ci]?.[oppIdx] ?? 0;
+                    const lethal = dmg >= 21;
+                    return (
+                      <div key={oppIdx} className="flex items-center justify-between gap-2">
+                        <span className={cn("min-w-0 flex-1 truncate text-sm font-medium", lethal && "text-destructive")}>
+                          {opponent.name}{lethal && " ✕"}
+                        </span>
+                        <div className="flex shrink-0 items-center gap-2">
+                          <Button variant="outline" size="icon" className="h-9 w-9"
+                            onClick={() => adjustCommanderDamage(ci, oppIdx, -1)}>−</Button>
+                          <span className={cn("w-7 text-center text-base font-bold tabular-nums", lethal && "text-destructive")}>
+                            {dmg}
+                          </span>
+                          <Button variant="outline" size="icon" className="h-9 w-9"
+                            onClick={() => adjustCommanderDamage(ci, oppIdx, 1)}>+</Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </DialogContent>
+            </Dialog>
+          );
+        })()}
 
         {/* Assign commanders dialog */}
         <Dialog

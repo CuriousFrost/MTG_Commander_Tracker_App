@@ -70,6 +70,15 @@ type GridPlacement = {
 };
 type GridConfig = { cols: number; rows: number; players: GridPlacement[] };
 
+// Dialogs opened from a player card are counter-rotated to match that seat, so
+// the panel reads upright from where the player is actually sitting. "side"
+// seats occupy the left edge, so their top must point right — same as the card.
+const SEAT_DIALOG_ROTATION: Record<GridPlacement["rotation"], string> = {
+  "0": "",
+  "180": "rotate-180",
+  side: "rotate-90",
+};
+
 const GRID_CONFIGS: Record<PlayerCount, GridConfig> = {
   2: {
     cols: 1,
@@ -294,7 +303,9 @@ function SideCard({
           style={{
             width: dims.h,
             height: dims.w,
-            transform: "translate(-50%, -50%) rotate(-90deg)",
+            // Side seats sit at the left edge of the device, so the card's top
+            // must point right (away from that player) for it to read upright.
+            transform: "translate(-50%, -50%) rotate(90deg)",
           }}
         >
           {children}
@@ -815,10 +826,17 @@ export default function LifeCounter() {
         {poisonDialogPlayer !== null && (() => {
           const { index: pi, rotation } = poisonDialogPlayer;
           const poison = players[pi]?.poison ?? 0;
-          const flip = rotation === "180";
           return (
             <Dialog open onOpenChange={(v) => { if (!v) setPoisonDialogPlayer(null); }}>
-              <DialogContent className={cn("w-72 max-w-[85vw]", flip && "rotate-180")}>
+              <DialogContent
+                className={cn(
+                  "w-72",
+                  // A quarter-turned panel spans the viewport's short axis, so
+                  // clamp its width against the height instead.
+                  rotation === "side" ? "max-w-[85vh]" : "max-w-[85vw]",
+                  SEAT_DIALOG_ROTATION[rotation],
+                )}
+              >
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
                     <Skull className="h-4 w-4" /> Poison — {players[pi]?.name}
@@ -844,10 +862,15 @@ export default function LifeCounter() {
         {/* Commander damage dialog */}
         {cdDialogPlayer !== null && (() => {
           const { index: ci, rotation } = cdDialogPlayer;
-          const flip = rotation === "180";
           return (
             <Dialog open onOpenChange={(v) => { if (!v) setCdDialogPlayer(null); }}>
-              <DialogContent className={cn("w-80 max-w-[90vw]", flip && "rotate-180")}>
+              <DialogContent
+                className={cn(
+                  "w-80",
+                  rotation === "side" ? "max-w-[90vh]" : "max-w-[90vw]",
+                  SEAT_DIALOG_ROTATION[rotation],
+                )}
+              >
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
                     <Swords className="h-4 w-4" /> CMD Damage — {players[ci]?.name}

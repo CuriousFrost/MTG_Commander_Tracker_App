@@ -8,6 +8,7 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { useIsSmallDevice, useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 
 // BeforeInstallPromptEvent is not in the standard TS lib
 interface BeforeInstallPromptEvent extends Event {
@@ -65,8 +66,10 @@ function AppLayoutInner() {
   }
 
   return (
-    <SidebarInset className="min-w-0">
-      <header className="flex h-14 items-center gap-2 border-b px-4">
+    // The life counter is a fixed-height board rather than a scrolling page, so
+    // it gets an exact-viewport shell and no page padding to lay seats out in.
+    <SidebarInset className={cn("min-w-0", isLifeCounter && "h-svh overflow-hidden")}>
+      <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
         <SidebarTrigger />
         <Separator orientation="vertical" className="h-6" />
         <span className="text-sm font-medium text-muted-foreground">Seasons Past</span>
@@ -82,7 +85,12 @@ function AppLayoutInner() {
           </Button>
         )}
       </header>
-      <main className="flex-1 min-w-0 px-3 py-4 sm:p-6">
+      <main
+        className={cn(
+          "flex-1 min-w-0",
+          isLifeCounter ? "min-h-0 overflow-hidden p-1" : "px-3 py-4 sm:p-6",
+        )}
+      >
         <Outlet />
       </main>
     </SidebarInset>
